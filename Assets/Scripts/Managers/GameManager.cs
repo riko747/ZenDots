@@ -1,5 +1,6 @@
 using Interfaces;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Zenject;
 
 namespace Managers
@@ -7,8 +8,10 @@ namespace Managers
     public class GameManager : IGameManager
     {
         [Inject] public void InitializeInstantiator(IInstantiator instantiator) => Instantiator = instantiator;
+        
         [Inject] private DotSpawner _dotSpawner;
         [Inject] private UIManager _uiManager;
+        [Inject] private LevelManager _levelManager;
         
         private int _expectedNumber;
         
@@ -27,8 +30,9 @@ namespace Managers
 
                 if (tappedValue == _dotSpawner.GetMaxDots())
                 {
-                    Debug.Log("Level is completed");
+                    _levelManager.SaveCurrentLevel();
                     _uiManager.ShowUIButton();
+                    SceneManager.LoadScene(0);
                 }
             }
             else

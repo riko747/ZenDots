@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Interfaces;
+using Managers;
 using Other;
 using UnityEngine;
 using Zenject;
@@ -9,30 +10,35 @@ public class DotSpawner : MonoBehaviour
 {
     [Inject] private IResourcesManager _resourcesManager;
     [Inject] private IGameManager _gameManager;
+    [Inject] private LevelManager _levelManager;
     
     [SerializeField] private RectTransform gameArea;
 
     private Vector3[] _gameAreaCorners;
     private float _defaultDotsSizeInPixels;
+    private int _dotsCount;
     
-    public const int MaxDots = 10;
     public const int MaxChecks = 10;
     
     private void Start()
     {
+        Debug.Log(
+            $"Level: {_levelManager.GetCurrentLevel().levelNumber}, Dots: {_levelManager.GetCurrentLevel().dotCount}, Time: {_levelManager.GetCurrentLevel().timeLimit}");
+        
         var dot = _resourcesManager.LoadEntity<Dot>(Constants.DOT_PREFAB_PATH);
         _defaultDotsSizeInPixels = dot.GetDotSizeInPixelsX;
         _gameAreaCorners = new Vector3[4];
+        _dotsCount = _levelManager.GetCurrentLevel().dotCount;
         var instantiatedDots = new List<Dot>();
         var numbers = new HashSet<int>();
 
-        while (numbers.Count < MaxDots)
+        while (numbers.Count < _levelManager.GetCurrentLevel().dotCount)
         {
-            var randomNumber = Random.Range(1, MaxDots + 1);
+            var randomNumber = Random.Range(1, _dotsCount + 1);
             numbers.Add(randomNumber);
         }
         
-        for (var i = 0; i < MaxDots; i++)
+        for (var i = 0; i < _dotsCount; i++)
         {
             Dot instantiatedDot = _gameManager.Instantiator.InstantiatePrefabForComponent<Dot>(dot, gameArea);
             
@@ -90,5 +96,5 @@ public class DotSpawner : MonoBehaviour
         return Vector2.zero;
     }
 
-    public int GetMaxDots() => MaxDots;
+    public int GetMaxDots() => _dotsCount;
 }

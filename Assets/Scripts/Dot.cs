@@ -23,13 +23,7 @@ public class Dot : MonoBehaviour
         return Vector3.Distance(corners[0], corners[1]);
     }
 
-    public void SetDotSize(float size)
-    {
-        GetDotTransform.sizeDelta = new Vector2(size, size);
-    }
+    public void SetDotSize(float size) => GetDotTransform.sizeDelta = new Vector2(size, size);
 
-    public void SetDotNumber(int number)
-    {
-        DotNumber = number;
-    }
+    public void SetDotNumber(int number) => DotNumber = number;
 }

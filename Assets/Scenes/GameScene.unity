@@ -200,7 +200,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dotSpawner: {fileID: 138096294}
-  _uiManager: {fileID: 271874990}
+  uiManager: {fileID: 271874990}
 --- !u!114 &181933634
 MonoBehaviour:
   m_ObjectHideFlags: 0
