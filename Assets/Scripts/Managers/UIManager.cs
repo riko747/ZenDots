@@ -7,7 +7,7 @@ namespace Managers
     {
         [SerializeField] private GameObject retryButton;
 
-        public void ShowUIButton()
+        public void ShowRetryButton()
         {
             retryButton.SetActive(true);
         }

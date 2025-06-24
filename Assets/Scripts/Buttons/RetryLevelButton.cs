@@ -4,9 +4,6 @@ namespace Buttons
 {
     public class RetryLevelButton : UIButton
     {
-        protected override void HandleButton()
-        {
-            SceneManager.LoadScene(0);
-        }
+        protected override void HandleButton() => SceneManager.LoadScene(0);
     }
 }

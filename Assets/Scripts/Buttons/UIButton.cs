@@ -7,16 +7,11 @@ namespace Buttons
     {
         [SerializeField] private Button button;
 
-        private void Start()
-        {
-            button.onClick.AddListener(HandleButton);
-        }
+        private void Start() => button.onClick.AddListener(HandleButton);
 
         protected abstract void HandleButton();
 
-        private void OnDestroy()
-        {
-            button.onClick.RemoveListener(HandleButton);
-        }
+        private void OnDestroy() => button.onClick.RemoveListener(HandleButton);
+
     }
 }

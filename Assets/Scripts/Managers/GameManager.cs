@@ -31,14 +31,13 @@ namespace Managers
                 if (tappedValue == _dotSpawner.GetMaxDots())
                 {
                     _levelManager.SaveCurrentLevel();
-                    _uiManager.ShowUIButton();
                     SceneManager.LoadScene(0);
                 }
             }
             else
             {
                 Debug.Log("Wrong");
-                _uiManager.ShowUIButton();
+                _uiManager.ShowRetryButton();
             }
         }
     }
