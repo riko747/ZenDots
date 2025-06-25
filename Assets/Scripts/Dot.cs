@@ -26,4 +26,7 @@ public class Dot : MonoBehaviour
     public void SetDotSize(float size) => GetDotTransform.sizeDelta = new Vector2(size, size);
 
     public void SetDotNumber(int number) => DotNumber = number;
+
+    public float GetMinDotSize() => 100;
+    public float GetMaxDotSize() => 250;
 }

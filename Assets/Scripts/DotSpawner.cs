@@ -63,6 +63,7 @@ public class DotSpawner : MonoBehaviour
         {
             var dot = _gameManager.Instantiator.InstantiatePrefabForComponent<Dot>(dotPrefab, gameArea);
 
+            dot.SetDotSize(Random.Range(dot.GetMinDotSize(), dot.GetMaxDotSize()));
             dot.GetDotTransform.position = GetRandomPositionInRect(instantiatedDots, dot);
 
             var number = numbers[i];
@@ -88,7 +89,7 @@ public class DotSpawner : MonoBehaviour
             
             positionForInstantiation.x = randomX;
             positionForInstantiation.y = randomY;
-
+            
             foreach (var currentDot in previouslyInstantiatedDots)
             {
                 if (Vector2.Distance(positionForInstantiation, currentDot.GetDotPosition) < currentDot.GetDotSizeInWorldSpace)
@@ -107,12 +108,11 @@ public class DotSpawner : MonoBehaviour
 
             if (attempts == MaxChecks)
             {
-                _defaultDotsSizeInPixels -= 1;
                 foreach (var previouslyInstantiatedDot in previouslyInstantiatedDots)
                 {
-                    previouslyInstantiatedDot.SetDotSize(_defaultDotsSizeInPixels);
+                    previouslyInstantiatedDot.SetDotSize(previouslyInstantiatedDot.GetDotSizeInPixelsX - 1);
                 }
-                instantiatedDot.SetDotSize(_defaultDotsSizeInPixels);
+                instantiatedDot.SetDotSize(instantiatedDot.GetDotSizeInPixelsX - 1);
                 attempts = 0;
             }
         }
