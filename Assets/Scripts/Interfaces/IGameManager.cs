@@ -1,3 +1,6 @@
+using System;
+using Entities.Dot;
+using Other;
 using Zenject;
 
 namespace Interfaces
@@ -5,7 +8,8 @@ namespace Interfaces
     internal interface IGameManager
     {
         public void Initialize();
-        public void TrySelect(int tappedValue);
+        public void TrySelect(Dot dot);
         public IInstantiator Instantiator { get; }
+        public Constants.GameMode GetGameMode();
     }
 }

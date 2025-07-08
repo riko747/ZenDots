@@ -5,11 +5,11 @@ namespace Managers
 {
     public class UIManager : MonoBehaviour
     {
-        [SerializeField] private GameObject retryButton;
-
+        [SerializeField] private GameObject retryScreen;
+        
         public void ShowRetryButton()
         {
-            retryButton.SetActive(true);
+            retryScreen.SetActive(true);
         }
     }
 }

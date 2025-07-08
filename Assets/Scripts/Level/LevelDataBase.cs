@@ -14,7 +14,7 @@ namespace Level
 
         public void Initialize()
         {
-            _levels = _resourcesManager.LoadEntities<LevelData>(Constants.LEVELS_PATH).OrderBy(level => level.levelNumber).ToList();
+            _levels = _resourcesManager.LoadEntities<LevelData>(Constants.LevelsPath).OrderBy(level => level.levelNumber).ToList();
         }
 
         public LevelData GetLevel(int levelNumber)

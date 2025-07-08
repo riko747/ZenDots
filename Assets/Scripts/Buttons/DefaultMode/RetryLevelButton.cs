@@ -1,6 +1,6 @@
 using UnityEngine.SceneManagement;
 
-namespace Buttons
+namespace Buttons.DefaultMode
 {
     public class RetryLevelButton : UIButton
     {

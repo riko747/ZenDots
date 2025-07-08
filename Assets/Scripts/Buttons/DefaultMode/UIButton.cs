@@ -1,17 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Buttons
+namespace Buttons.DefaultMode
 {
     public abstract class UIButton : MonoBehaviour
     {
         [SerializeField] private Button button;
 
-        private void Start() => button.onClick.AddListener(HandleButton);
+        protected virtual void Start() => button.onClick.AddListener(HandleButton);
 
         protected abstract void HandleButton();
 
-        private void OnDestroy() => button.onClick.RemoveListener(HandleButton);
+        protected virtual void OnDestroy() => button.onClick.RemoveListener(HandleButton);
 
     }
 }

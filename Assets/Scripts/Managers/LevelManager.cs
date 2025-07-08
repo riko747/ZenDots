@@ -26,12 +26,12 @@ namespace Managers
 
         public LevelData GetCurrentLevel()
         {
-            return GetLevelFromDataBase(PlayerPrefs.HasKey(Constants.CURRENT_LEVEL) ? PlayerPrefs.GetInt(Constants.CURRENT_LEVEL) : 0);
+            return GetLevelFromDataBase(PlayerPrefs.HasKey(Constants.CurrentLevel) ? PlayerPrefs.GetInt(Constants.CurrentLevel) : 0);
         }
         
         public void SaveCurrentLevel()
         {
-            _playerPrefsManager.SaveKey(Constants.CURRENT_LEVEL, PlayerPrefs.GetInt(Constants.CURRENT_LEVEL) + 1);
+            _playerPrefsManager.SaveKey(Constants.CurrentLevel, PlayerPrefs.GetInt(Constants.CurrentLevel) + 1);
         }
     }
 }

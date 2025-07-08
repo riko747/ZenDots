@@ -6,7 +6,7 @@ namespace Other
     public class SafeAreaFitter : MonoBehaviour
     {
         private RectTransform _rectTransform;
-        private float _padding = 125f;
+        private const float Padding = 125f;
 
         private void Awake()
         {
@@ -16,10 +16,10 @@ namespace Other
 
         private void ApplySafeArea()
         {
-            Rect safeArea = Screen.safeArea;
+            var safeArea = Screen.safeArea;
             
-            Vector2 anchorMin = safeArea.position;
-            Vector2 anchorMax = safeArea.position + safeArea.size;
+            var anchorMin = safeArea.position;
+            var anchorMax = safeArea.position + safeArea.size;
 
             anchorMin.x /= Screen.width;
             anchorMin.y /= Screen.height;
@@ -29,8 +29,8 @@ namespace Other
             _rectTransform.anchorMin = anchorMin;
             _rectTransform.anchorMax = anchorMax;
             
-            _rectTransform.offsetMin = new Vector2(_padding, _padding);
-            _rectTransform.offsetMax = new Vector2(-_padding, -_padding);
+            _rectTransform.offsetMin = new Vector2(Padding, Padding);
+            _rectTransform.offsetMax = new Vector2(-Padding, -Padding);
         }
     }
 }
