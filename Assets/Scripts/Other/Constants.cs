@@ -2,9 +2,6 @@ namespace Other
 {
     public static class Constants
     {
-        //Enums
-        public enum GameMode {Default, Zen}
-        
         // Core
         public const float MinDotSize = 100;
         public const float MaxDotSize = 250;
@@ -15,11 +12,12 @@ namespace Other
         
         //Scenes
         public const string MainMenuSceneName = "MainMenu";
-        public const string DefaultModeSceneName = "DefaultMode";
-        public const string ZenModeSceneName = "ZenMode";
+        public const string GameSceneName = "Game";
         
         //PlayerPrefs
         public const string CurrentLevel = "CurrentLevel";
         public const string CurrentGameMode = "CurrentGameMode";
+        public const string DefaultGameMode = "DefaultGameMode";
+        public const string ZenGameMode = "ZenGameMode";
     }
 }

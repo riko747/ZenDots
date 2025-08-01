@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using Interfaces;
+using UnityEngine;
 
 namespace Managers
 {
-    public class AudioManager
+    public class AudioManager : IAudioManager
     {
         public void PlaySound(AudioSource audioSource, AudioClip audioClip)
         {

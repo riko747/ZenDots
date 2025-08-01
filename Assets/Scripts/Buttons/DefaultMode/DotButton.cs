@@ -1,7 +1,6 @@
 using Audio;
 using Entities.Dot;
 using Interfaces;
-using Managers;
 using UnityEngine;
 using Zenject;
 
@@ -10,8 +9,8 @@ namespace Buttons.DefaultMode
     public class DotButton : UIButton
     {
         [Inject] private IGameManager _gameManager;
-        [Inject] private DoTweenManager _doTweenManager;
-        [Inject] private AudioManager _audioManager;
+        [Inject] private IDoTweenManager _doTweenManager;
+        [Inject] private IAudioManager _audioManager;
         
         [SerializeField] private Dot dot;
         [SerializeField] private SoundLibrary soundLibrary;
@@ -20,11 +19,13 @@ namespace Buttons.DefaultMode
         {
             _gameManager.TrySelect(dot);
         }
+        
+        
 
         public void PlayCorrectSequence()
         {
             _audioManager.PlaySound(dot.GetAudioSource(), soundLibrary.popSound);
-            _doTweenManager.PlayPopAnimation(dot.GetTransform());
+            _doTweenManager.PlayPopOutAnimation(dot.GetTransform(), dot);
         }
         
         public void PlayWrongSequence()

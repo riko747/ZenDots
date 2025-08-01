@@ -12,8 +12,8 @@ namespace Buttons.MainMenu
 
         protected override void HandleButton()
         {
-            _playerPrefsManager.SaveKey(Constants.CurrentGameMode, Constants.GameMode.Default);
-            _sceneLoadManager.LoadScene(Constants.ZenModeSceneName);
+            _playerPrefsManager.SaveKey(Constants.CurrentGameMode, Constants.ZenGameMode);
+            _sceneLoadManager.LoadScene(Constants.GameSceneName);
         }
     }
 }

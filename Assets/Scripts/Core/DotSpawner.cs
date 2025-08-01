@@ -15,16 +15,18 @@ namespace Core
 
         private void Start()
         {
-            if (_gameManager.GetGameMode() == Constants.GameMode.Default)
+            if (_gameManager.GetGameMode() == Constants.DefaultGameMode)
             {
                 _currentDotSpawner = _gameManager.Instantiator.Instantiate<DefaultModeDotSpawner>
                 (
                     new object[] { gameArea }
                 );
             }
-            else if (_gameManager.GetGameMode() == Constants.GameMode.Zen)
+            else if (_gameManager.GetGameMode() == Constants.ZenGameMode)
             {
-                
+                _currentDotSpawner = _gameManager.Instantiator.Instantiate<ZenModeDotSpawner>(
+                    new object[] { gameArea }
+                );
             }
             _currentDotSpawner.Spawn();
         }

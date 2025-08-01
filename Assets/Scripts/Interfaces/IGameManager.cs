@@ -10,6 +10,7 @@ namespace Interfaces
         public void Initialize();
         public void TrySelect(Dot dot);
         public IInstantiator Instantiator { get; }
-        public Constants.GameMode GetGameMode();
+        public Action OnRightDotClicked { get; set; }
+        public string GetGameMode();
     }
 }

@@ -15,7 +15,6 @@ namespace Entities.Dot
         [SerializeField] private Image image;
         [SerializeField] private DotButton button;
         [SerializeField] private AudioSource audioSource;
-    
         [SerializeField] private DotRipple ripple;
 
         #region Getters
@@ -26,6 +25,8 @@ namespace Entities.Dot
         public RectTransform GetTransform() => transform as RectTransform;
         public float GetDotSizeInPixelsX() => GetTransform().sizeDelta.x;
         public bool IsLast { get; private set; }
+        public bool IsDeactivated { get; private set; }
+        public bool IsPending { get; private set; }
         public float GetSizeInWorldSpace()
         {
             var corners = new Vector3[4];
@@ -40,6 +41,36 @@ namespace Entities.Dot
         public void SetNumber(int number) => DotNumber = number;
         public void SetText(string text) => label.text = text;
         public void SetLast(bool last) => IsLast = last;
+        public void DisableGraphics() => image.enabled = false;
+        public void EnableGraphics() => image.enabled = true;
+        
+        public void SetActivatedState(bool activated)
+        {
+            if (activated)
+            {
+                IsDeactivated = false;
+            }
+            else
+            {
+                IsDeactivated = true;
+                
+            }
+        }
+
+        public void SetPendingState(bool pending)
+        {
+            if (pending)
+            {
+                IsPending = true;
+            }
+            else
+            {
+                IsPending = false;
+            }
+        }
+
+        public void MoveUnderOtherDots() => transform.SetSiblingIndex(0);
+
         #endregion
 
         #region Properties

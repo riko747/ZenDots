@@ -16,7 +16,7 @@ namespace Managers
         
         private Sequence _doTweenSequence;
         
-        public void PlayFadeAnimation(GameObject parent, FadeType fadeType)
+        public void PlayFadeAnimation(GameObject parent, Dot dot, FadeType fadeType)
         {
             _doTweenSequence = DOTween.Sequence();
             switch (fadeType)
@@ -46,14 +46,34 @@ namespace Managers
             }
         }
 
-        public void PlayPopAnimation(RectTransform transform)
+        public void PlayPopOutAnimation(RectTransform transform, Dot dot)
         {
+            dot.SetPendingState(true);
             _doTweenSequence = DOTween.Sequence();
             _doTweenSequence.Append(transform.DOScale(1.2f, 0.3f));
             _doTweenSequence.Append(transform.DOScale(0.9f, 0.3f));
             _doTweenSequence.Join(transform.DOScale(0, 0.5f));
             _doTweenSequence.SetEase(Ease.OutBack);
-            _doTweenSequence.Play();
+            _doTweenSequence.Play().OnComplete(() =>
+            {
+                dot.DisableGraphics();
+                dot.SetPendingState(false);
+                dot.SetActivatedState(false);
+            });
+        }
+
+        public void PlayPopInAnimation(RectTransform transform, Dot dot)
+        {
+            dot.MoveUnderOtherDots();
+            dot.EnableGraphics();
+            dot.SetActivatedState(true);
+            dot.SetPendingState(true);
+            _doTweenSequence = DOTween.Sequence();
+            _doTweenSequence.Append(transform.DOScale(0.9f, 0.5f));
+            _doTweenSequence.Append(transform.DOScale(1.2f, 0.3f));
+            _doTweenSequence.Append(transform.DOScale(1, 0.3f));
+            _doTweenSequence.SetEase(Ease.OutBack);
+            _doTweenSequence.Play().OnComplete(() => dot.SetPendingState(false));
         }
 
         public void PlayRippleAnimation(Dot dot, DotRipple ripple)

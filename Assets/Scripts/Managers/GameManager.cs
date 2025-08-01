@@ -1,3 +1,4 @@
+using System;
 using Core;
 using Entities.Dot;
 using Interfaces;
@@ -16,10 +17,12 @@ namespace Managers
         [Inject] private LevelManager _levelManager;
         [Inject] private PlayerPrefsManager _playerPrefsManager;
         
-        private Constants.GameMode _gameMode;
+        private string _gameMode;
         
         private int _expectedNumber;
         public IInstantiator Instantiator { get; private set; }
+        
+        public Action OnRightDotClicked { get; set; }
         
         public void Initialize()
         {
@@ -27,37 +30,46 @@ namespace Managers
             InitializeGameMode();
         }
 
-        public Constants.GameMode GetGameMode() => _gameMode;
+        public string GetGameMode() => _gameMode;
         
         private void InitializeGameMode()
         {
-            if (_playerPrefsManager.LoadKey<string>(Constants.CurrentGameMode) == nameof(Constants.GameMode.Default))
+            var currentGameMode = _playerPrefsManager.LoadKey<string>(Constants.CurrentGameMode);
+            
+            if (currentGameMode == Constants.DefaultGameMode)
             {
-                _gameMode = Constants.GameMode.Default;
+                _gameMode = Constants.DefaultGameMode;
             }
 
-            if (_playerPrefsManager.LoadKey<string>(Constants.CurrentGameMode) == nameof(Constants.GameMode.Zen))
+            if (currentGameMode == Constants.ZenGameMode)
             {
-                _gameMode = Constants.GameMode.Zen;
+                _gameMode = Constants.ZenGameMode;
             }
         }
 
         public void TrySelect(Dot dot)
         {
-            if (dot.DotNumber == _expectedNumber)
-            {
-                _expectedNumber++;
-                dot.GetDotButton().PlayCorrectSequence();
-                if (dot.IsLast)
+                if (dot.DotNumber == _expectedNumber)
                 {
-                    _levelManager.SaveCurrentLevel();
-                    SceneManager.LoadScene(Constants.DefaultModeSceneName);
+                    _expectedNumber++;
+                    dot.GetDotButton().PlayCorrectSequence();
+                    if (_gameMode == Constants.DefaultGameMode)
+                    {
+                        if (dot.IsLast)
+                        {
+                            _levelManager.SaveCurrentLevel();
+                            SceneManager.LoadScene(Constants.GameSceneName);
+                        }
+                    }
+                    else
+                    {
+                        OnRightDotClicked?.Invoke();
+                    }
                 }
-            }
-            else
-            {
-                dot.GetDotButton().PlayWrongSequence();
-            }
+                else
+                {
+                    dot.GetDotButton().PlayWrongSequence();
+                }
         }
     }
 }

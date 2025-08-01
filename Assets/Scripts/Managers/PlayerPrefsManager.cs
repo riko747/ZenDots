@@ -28,16 +28,25 @@ namespace Managers
         {
             try
             {
-                if (PlayerPrefs.HasKey(key))
-                {
-                    return (T)Convert.ChangeType(PlayerPrefs.GetInt(key), typeof(T));
-                }
+                if (!PlayerPrefs.HasKey(key))
+                    return default;
+
+                var type = typeof(T);
+
+                if (type == typeof(int))
+                    return (T)(object)PlayerPrefs.GetInt(key);
+                if (type == typeof(float))
+                    return (T)(object)PlayerPrefs.GetFloat(key);
+                if (type == typeof(string))
+                    return (T)(object)PlayerPrefs.GetString(key);
+
+                throw new NotSupportedException($"Type {type} is not supported by PlayerPrefs");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Debug.LogException(new Exception("There is no any keys with this name in PlayerPrefs"));
+                Debug.LogException(ex);
+                return default;
             }
-            return default;
         }
     }
 }
