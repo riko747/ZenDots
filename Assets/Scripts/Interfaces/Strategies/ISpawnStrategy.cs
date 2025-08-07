@@ -1,4 +1,4 @@
-﻿namespace Interfaces
+﻿namespace Interfaces.Strategies
 {
     public interface ISpawnStrategy
     {

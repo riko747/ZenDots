@@ -1,18 +1,18 @@
-using Buttons.DefaultMode;
+﻿using Buttons.DefaultMode;
 using Managers;
 using Other;
 using Zenject;
 
 namespace Buttons.MainMenu
 {
-    public class StartDefaultModeButton : UIButton
+    public class ChooseColorDotModeButton : UIButton
     {
         [Inject] private SceneLoadManager _sceneLoadManager;
-        [Inject]  private PlayerPrefsManager _playerPrefsManager;
+        [Inject] private PlayerPrefsManager _playerPrefsManager;
         
         protected override void HandleButton()
         {
-            _playerPrefsManager.SaveKey(Constants.CurrentGameMode, Constants.DefaultGameMode);
+            _playerPrefsManager.SaveKey(Constants.CurrentDotMode, Constants.ColorDotMode);
             _sceneLoadManager.LoadScene(Constants.GameSceneName);
         }
     }

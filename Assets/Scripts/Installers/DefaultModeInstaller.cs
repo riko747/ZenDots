@@ -18,6 +18,7 @@ namespace Installers
             Container.BindInterfacesAndSelfTo<PlayerPrefsManager>().AsSingle();
             Container.BindInterfacesAndSelfTo<DoTweenManager>().AsSingle();
             Container.BindInterfacesAndSelfTo<AudioManager>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SceneLoadManager>().AsSingle();
             Container.BindInstance(uiManager);
             Container.BindInstance(dotSpawner);
         }

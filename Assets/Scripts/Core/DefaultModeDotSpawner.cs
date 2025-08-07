@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Entities.Dot;
-using Interfaces;
+using Interfaces.Managers;
+using Interfaces.Strategies;
 using Managers;
 using Other;
 using UnityEngine;

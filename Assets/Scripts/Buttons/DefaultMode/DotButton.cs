@@ -1,6 +1,7 @@
 using Audio;
 using Entities.Dot;
 using Interfaces;
+using Interfaces.Managers;
 using UnityEngine;
 using Zenject;
 
@@ -17,7 +18,7 @@ namespace Buttons.DefaultMode
 
         protected override void HandleButton()
         {
-            _gameManager.TrySelect(dot);
+            _gameManager.ValidateStrategy.Validate(dot);
         }
         
         

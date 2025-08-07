@@ -5,15 +5,15 @@ using Zenject;
 
 namespace Buttons.MainMenu
 {
-    public class StartZenModeButton : UIButton
+    public class ChooseZenModeButton : UIButton
     {
-        [Inject] private SceneLoadManager _sceneLoadManager;
         [Inject] private PlayerPrefsManager _playerPrefsManager;
+        [Inject] private UIManager _uiManager;
 
         protected override void HandleButton()
         {
             _playerPrefsManager.SaveKey(Constants.CurrentGameMode, Constants.ZenGameMode);
-            _sceneLoadManager.LoadScene(Constants.GameSceneName);
+            _uiManager.ProceedToDotModeSelection();
         }
     }
 }

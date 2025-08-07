@@ -1,4 +1,4 @@
-﻿namespace Interfaces
+﻿namespace Interfaces.Managers
 {
     public interface IPlayerPrefsManager
     {

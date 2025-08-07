@@ -2,7 +2,7 @@
 using Managers;
 using UnityEngine;
 
-namespace Interfaces
+namespace Interfaces.Managers
 {
     public interface IDoTweenManager
     {

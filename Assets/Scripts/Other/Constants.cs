@@ -14,10 +14,19 @@ namespace Other
         public const string MainMenuSceneName = "MainMenu";
         public const string GameSceneName = "Game";
         
+        //GameModes
+        public const string DefaultGameMode = "DefaultGameMode";
+        public const string ZenGameMode = "ZenGameMode";
+        
+        //DotModes
+        public const string NumberDotMode = "NumberDotMode";
+        public const string ColorDotMode = "ColorDotMode";
+        
         //PlayerPrefs
         public const string CurrentLevel = "CurrentLevel";
         public const string CurrentGameMode = "CurrentGameMode";
-        public const string DefaultGameMode = "DefaultGameMode";
-        public const string ZenGameMode = "ZenGameMode";
+        public const string CurrentDotMode = "CurrentDotMode";
+        
+        
     }
 }

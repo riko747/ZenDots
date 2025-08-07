@@ -1,6 +1,6 @@
 ﻿using Level;
 
-namespace Interfaces
+namespace Interfaces.Managers
 {
     public interface ILevelManager
     {
