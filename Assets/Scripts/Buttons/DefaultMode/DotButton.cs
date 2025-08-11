@@ -20,8 +20,6 @@ namespace Buttons.DefaultMode
         {
             _gameManager.ValidateStrategy.Validate(dot);
         }
-        
-        
 
         public void PlayCorrectSequence()
         {

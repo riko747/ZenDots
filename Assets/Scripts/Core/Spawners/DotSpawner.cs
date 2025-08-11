@@ -1,11 +1,10 @@
-using Interfaces;
 using Interfaces.Managers;
 using Interfaces.Strategies;
 using Other;
 using UnityEngine;
 using Zenject;
 
-namespace Core
+namespace Core.Spawners
 {
     public class DotSpawner : MonoBehaviour
     {

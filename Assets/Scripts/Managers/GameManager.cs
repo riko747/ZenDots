@@ -1,5 +1,6 @@
 using System;
 using Core;
+using Core.Spawners;
 using Core.Validators;
 using Interfaces.Managers;
 using Interfaces.Strategies;
@@ -51,7 +52,17 @@ namespace Managers
 
         private void InitializeValidator()
         {
-            ValidateStrategy = Instantiator.Instantiate<NumberValidator>(new object[] { _gameMode });
+            var currentDotMode = _playerPrefsManager.LoadKey<string>(Constants.CurrentDotMode);
+
+            if (currentDotMode == Constants.NumberDotMode)
+            {
+                ValidateStrategy = Instantiator.Instantiate<NumberValidator>(new object[] { _gameMode });
+            }
+
+            if (currentDotMode == Constants.ColorDotMode)
+            {
+                ValidateStrategy = Instantiator.Instantiate<ColorValidator>(new object[] { _gameMode });
+            }
         }
     }
 }

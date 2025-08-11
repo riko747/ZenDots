@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Entities.Dot;
 using Interfaces.Managers;
 using Interfaces.Strategies;
@@ -7,26 +8,24 @@ using Other;
 using UnityEngine;
 using Zenject;
 
-namespace Core
+namespace Core.Spawners
 {
-    public class ZenModeDotSpawner : ISpawnStrategy
+    public class DefaultModeDotSpawner : ISpawnStrategy
     {
         [Inject] private IResourcesManager _resourcesManager;
         [Inject] private IGameManager _gameManager;
+        [Inject] private ILevelManager _levelManager;
         [Inject] private IDoTweenManager _doTweenManager;
         
         private Vector3[] _gameAreaCorners;
         private float _defaultDotsSizeInPixels;
-        private readonly RectTransform _gameArea;
-        private int _nextDotNumber;
+        private RectTransform _gameArea;
 
         private const int MaxChecks = 100;
-        private const int DotsStartCount = 9;
-
-        private readonly List<Dot> _instantiatedDots = new();
         
+        private int _dotsCount;
 
-        public ZenModeDotSpawner(RectTransform gameArea)
+        public DefaultModeDotSpawner(RectTransform gameArea)
         {
             _gameArea = gameArea;
         }
@@ -34,8 +33,9 @@ namespace Core
         public void Spawn()
         {
             InitializeFields();
-            _gameManager.OnRightDotClicked += AddNewDot;
-            SpawnDots(DotsStartCount);
+
+            var numbers = GenerateUniqueNumbers(_dotsCount);
+            SpawnDots(numbers);
         }
 
         private void InitializeFields()
@@ -43,53 +43,42 @@ namespace Core
             var dotPrefab = _resourcesManager.LoadEntity<Dot>(Constants.DotPrefabPath);
             _defaultDotsSizeInPixels = dotPrefab.GetDotSizeInPixelsX();
             _gameAreaCorners = new Vector3[4];
-            _nextDotNumber = DotsStartCount + 1;
+            _dotsCount = _levelManager.GetCurrentLevel().dotCount;
         }
 
-        private void SpawnDots(int number, bool newDot = false, int newDotNumber = 0)
+        private List<int> GenerateUniqueNumbers(int count)
+        {
+            var numbers = Enumerable.Range(1, count).ToList();
+            for (var i = 0; i < numbers.Count; i++)
+            {
+                numbers[i] = i + 1;
+            }
+            return numbers;
+        }
+
+        private void SpawnDots(List<int> numbers)
         {
             var dotPrefab = _resourcesManager.LoadEntity<Dot>(Constants.DotPrefabPath);
-            for (var i = 0; i != number; i++)
+            var instantiatedDots = new List<Dot>();
+
+            for (var i = 0; i < _dotsCount; i++)
             {
                 var dot = _gameManager.Instantiator.InstantiatePrefabForComponent<Dot>(dotPrefab, _gameArea);
 
                 dot.SetSize(Random.Range(Constants.MinDotSize, Constants.MaxDotSize));
-                dot.SetPosition(GetRandomPositionInRect(_instantiatedDots, dot));
-
-                if (newDot)
+                dot.SetPosition(GetRandomPositionInRect(instantiatedDots, dot));
+            
+                var number = numbers[i];
+                dot.SetText(number.ToString());
+                dot.SetNumber(number);
+                if (i + 1 == numbers.Count)
                 {
-                    dot.SetText(newDotNumber.ToString());
-                    dot.SetNumber(newDotNumber);
-                    _nextDotNumber++;
+                    dot.SetLast(true);   
                 }
-                else
-                {
-                    dot.SetText((i + 1).ToString());
-                    dot.SetNumber(i + 1);
-                    _instantiatedDots.Add(dot);
-                }
-
                 _doTweenManager.PlayFadeAnimation(dot.gameObject, dot, DoTweenManager.FadeType.FadeIn);
-            }
-        }
 
-        private void AddNewDot()
-        {
-            foreach (var instantiatedDot in _instantiatedDots)
-            {
-                if (instantiatedDot.IsDeactivated)
-                {
-                    instantiatedDot.SetSize(Random.Range(Constants.MinDotSize, Constants.MaxDotSize));
-                    instantiatedDot.SetPosition(GetRandomPositionInRect(_instantiatedDots, instantiatedDot));
-
-                    instantiatedDot.SetText(_nextDotNumber.ToString());
-                    instantiatedDot.SetNumber(_nextDotNumber);
-                    _doTweenManager.PlayPopInAnimation(instantiatedDot.GetTransform(), instantiatedDot);
-                    _nextDotNumber++;
-                    return;
-                }
+                instantiatedDots.Add(dot);
             }
-            SpawnDots(1, true, _nextDotNumber);
         }
     
         private Vector2 GetRandomPositionInRect(List<Dot> previouslyInstantiatedDots, Dot instantiatedDot)
@@ -108,16 +97,14 @@ namespace Core
                 positionForInstantiation.x = randomX;
                 positionForInstantiation.y = randomY;
             
-                foreach (var previouslyInstantiatedDot in previouslyInstantiatedDots)
+                foreach (var currentDot in previouslyInstantiatedDots)
                 {
-                    if (previouslyInstantiatedDot.IsDeactivated || previouslyInstantiatedDot.IsPending) continue;
-
-                    if (!(Vector2.Distance(positionForInstantiation, previouslyInstantiatedDot.GetPosition()) <
-                          previouslyInstantiatedDot.GetSizeInWorldSpace())) continue;
-                    
-                    isTooClose = true;
-                    attempts++;
-                    break;
+                    if (Vector2.Distance(positionForInstantiation, currentDot.GetPosition()) < currentDot.GetSizeInWorldSpace())
+                    {
+                        isTooClose = true;
+                        attempts++;
+                        break;
+                    }
                 }
 
                 if (!isTooClose)
