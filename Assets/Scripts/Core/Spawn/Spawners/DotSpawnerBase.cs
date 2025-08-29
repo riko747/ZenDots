@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Entities.Dot;
-using Interfaces.Strategies;
 using Managers;
 using Other;
 using UnityEngine;
@@ -8,25 +7,24 @@ using Zenject;
 
 namespace Core.Spawn.Spawners
 {
-    public abstract class DotSpawnerBase : ISpawnStrategy
+    public abstract class DotSpawnerBase
     {
         [Inject] protected ResourcesManager ResourcesManager;
         [Inject] protected GameManager GameManager;
         [Inject] protected DoTweenManager DoTweenManager;
 
-        protected readonly RectTransform Area;
-        protected readonly Vector3[] Corners = new Vector3[4];
+        private readonly RectTransform area;
+        private readonly Vector3[] corners = new Vector3[4];
 
-        protected Dot Prefab;
+        private Dot prefab;
 
-        protected DotSpawnerBase(RectTransform area) => Area = area;
-
+        protected DotSpawnerBase(RectTransform area) => this.area = area;
         
         protected struct SpawnConfig
         {
-            public bool SkipInactive;      
-            public bool UsePop;            
-            public bool MarkLastInBatch;   
+            public readonly bool SkipInactive;
+            public readonly bool UsePop;   
+            public readonly bool MarkLastInBatch;
             public SpawnConfig(bool skipInactive, bool usePop, bool markLastInBatch)
             {
                 SkipInactive = skipInactive;
@@ -42,17 +40,20 @@ namespace Core.Spawn.Spawners
         
         protected void InitIfNeeded()
         {
-            if (Prefab != null) return;
-            Prefab = ResourcesManager.LoadEntity<Dot>(Constants.DotPrefabPath);
+            if (prefab != null) return;
+
+            Debug.Assert(area != null, "[DotSpawner] Area is null");
+            prefab = ResourcesManager.LoadEntity<Dot>(Constants.DotPrefabPath);
+            Debug.Assert(prefab != null, "[DotSpawner] Prefab not found at Constants.DotPrefabPath");
         }
 
-        protected float RandSizePx()
+        private float RandSizePx()
             => Random.Range(Constants.MinDotSize, Constants.MaxDotSize);
 
-        protected Vector2 PlaceDot(List<Dot> pool, Dot dot, bool skipInactive)
-            => DotPlacement.GetFreePos(Area, Corners, pool, dot, Constants.MaxChecks, skipInactive);
-        
-        protected void BringToFront(Dot d)
+        private Vector2 PlaceDot(List<Dot> pool, Dot dot, bool skipInactive)
+            => DotPlacement.GetFreePos(area, corners, pool, dot, Constants.MaxChecks, skipInactive);
+
+        private void BringToFront(Dot d)
         {
             d.GetTransform().SetAsLastSibling();
         }
@@ -69,7 +70,7 @@ namespace Core.Spawn.Spawners
         
         protected Dot SpawnCore(List<Dot> pool, int number, SpawnConfig cfg)
         {
-            var dot = GameManager.Instantiator.InstantiatePrefabForComponent<Dot>(Prefab, Area);
+            var dot = GameManager.Instantiator.InstantiatePrefabForComponent<Dot>(prefab, area);
 
             DotUtil.Activate(dot);
             BringToFront(dot);
@@ -87,30 +88,30 @@ namespace Core.Spawn.Spawners
             return dot;
         }
         
-        protected void SpawnBatchCore(List<Dot> pool, int count, int startNumber, SpawnConfig cfg)
+        protected void SpawnBatchCore(List<Dot> pool, int count, int startNumber, SpawnConfig spawnConfig)
         {
             for (int i = 0; i < count; i++)
             {
                 var number = startNumber + i;
-                var dot = SpawnCore(pool, number, cfg);
-                if (cfg.MarkLastInBatch && i == count - 1)
+                var dot = SpawnCore(pool, number, spawnConfig);
+                if (spawnConfig.MarkLastInBatch && i == count - 1)
                     dot.SetLast(true);
             }
         }
 
-        protected void ReuseCore(Dot d, List<Dot> pool, int number, SpawnConfig cfg)
+        protected void ReuseCore(Dot dot, List<Dot> pool, int number, SpawnConfig cfg)
         {
-            DotUtil.Activate(d);
-            BringToFront(d);
+            DotUtil.Activate(dot);
+            BringToFront(dot);
 
-            d.SetSize(RandSizePx());
-            d.SetPosition(PlaceDot(pool, d, cfg.SkipInactive));
+            dot.SetSize(RandSizePx());
+            dot.SetPosition(PlaceDot(pool, dot, cfg.SkipInactive));
 
-            d.SetText(number.ToString());
-            d.SetNumber(number);
+            dot.SetText(number.ToString());
+            dot.SetNumber(number);
 
-            if (cfg.UsePop) DoTweenManager.PlayPopInAnimation(d.GetTransform(), d);
-            else            DoTweenManager.PlayFadeAnimation(d.gameObject, d, DoTweenManager.FadeType.FadeIn);
+            if (cfg.UsePop) DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot);
+            else            DoTweenManager.PlayFadeAnimation(dot.gameObject, dot, DoTweenManager.FadeType.FadeIn);
         }
 
 
