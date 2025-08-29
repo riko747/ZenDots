@@ -42,7 +42,6 @@ namespace Core.Spawn.Spawners
 
         private Dot SpawnOne(int number, bool usePop)
         {
-            // якщо хочеш керувати fade/pop через параметр:
             var cfg = usePop ? ZenReusePop : ZenSpawnFade;
             return SpawnCore(_instantiatedDots, number, cfg);
         }
