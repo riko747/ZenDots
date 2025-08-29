@@ -5,6 +5,8 @@ namespace Other
         // Core
         public const float MinDotSize = 100;
         public const float MaxDotSize = 250;
+        public const int MaxChecks = 10000;
+        public const int ZenModeDotsStartCount = 9;
         
         //Paths
         public const string DotPrefabPath = "Entities/Dot";

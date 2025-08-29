@@ -1,6 +1,5 @@
 ﻿using DG.Tweening;
 using Entities.Dot;
-using Interfaces;
 using Interfaces.Managers;
 using UnityEngine;
 using UnityEngine.UI;

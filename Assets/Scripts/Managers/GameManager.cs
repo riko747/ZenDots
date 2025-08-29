@@ -1,6 +1,5 @@
 using System;
-using Core;
-using Core.Spawners;
+using Core.Spawn.Spawners;
 using Core.Validators;
 using Interfaces.Managers;
 using Interfaces.Strategies;
