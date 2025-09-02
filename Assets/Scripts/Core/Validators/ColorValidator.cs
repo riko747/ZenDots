@@ -1,4 +1,5 @@
 ﻿using Entities.Dot;
+using Interfaces.Managers;
 using Interfaces.Strategies;
 using Managers;
 using Other;
@@ -8,8 +9,8 @@ namespace Core.Validators
 {
     public class ColorValidator : IValidateStrategy
     {
-        [Inject] private LevelManager _levelManager;
-        [Inject] private GameManager _gameManager;
+        [Inject] private ILevelManager _levelManager;
+        [Inject] private IGameManager _gameManager;
         
         private readonly string _gameMode;   
         private int _expectedNumber = 1;

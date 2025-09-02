@@ -1,14 +1,13 @@
-﻿using Entities.Dot;
-using Managers;
+﻿using System;
+using Entities.Dot;
 using UnityEngine;
 
 namespace Interfaces.Managers
 {
     public interface IDoTweenManager
     {
-        public void PlayFadeAnimation(GameObject parent, Dot dot, DoTweenManager.FadeType fadeType);
-        public void PlayPopOutAnimation(RectTransform transform, Dot dot);
-        public void PlayPopInAnimation(RectTransform transform, Dot dot);
-        public void PlayRippleAnimation(Dot dot, DotRipple ripple);
+        public void PlayPopOutAnimation(RectTransform transform, Dot dot, Action callback =  null);
+        public void PlayPopInAnimation(RectTransform transform, Dot dot , Action callback =  null);
+        public void PlayRippleAnimation(Dot dot, DotRipple ripple, Action callback =  null);
     }
 }

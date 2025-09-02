@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Managers;
+using Interfaces.Managers;
 using Other;
 using Zenject;
 
@@ -8,7 +8,7 @@ namespace Level
 {
     public class LevelDataBase
     {
-        [Inject] private ResourcesManager _resourcesManager;
+        [Inject] private IResourcesManager _resourcesManager;
         
         private List<LevelData> _levels;
 

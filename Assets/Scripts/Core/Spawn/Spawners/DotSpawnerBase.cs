@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using Entities.Dot;
-using Managers;
+using Interfaces.Managers;
 using Other;
 using UnityEngine;
 using Zenject;
@@ -9,9 +9,9 @@ namespace Core.Spawn.Spawners
 {
     public abstract class DotSpawnerBase
     {
-        [Inject] protected ResourcesManager ResourcesManager;
-        [Inject] protected GameManager GameManager;
-        [Inject] protected DoTweenManager DoTweenManager;
+        [Inject] protected IResourcesManager ResourcesManager;
+        [Inject] protected IGameManager GameManager;
+        [Inject] protected IDoTweenManager DoTweenManager;
 
         private readonly RectTransform area;
         private readonly Vector3[] corners = new Vector3[4];
@@ -23,20 +23,18 @@ namespace Core.Spawn.Spawners
         protected struct SpawnConfig
         {
             public readonly bool SkipInactive;
-            public readonly bool UsePop;   
             public readonly bool MarkLastInBatch;
-            public SpawnConfig(bool skipInactive, bool usePop, bool markLastInBatch)
+            public SpawnConfig(bool skipInactive, bool markLastInBatch)
             {
                 SkipInactive = skipInactive;
-                UsePop = usePop;
                 MarkLastInBatch = markLastInBatch;
             }
         }
         
-        protected static readonly SpawnConfig DefaultBatch   = new(false, false, true);  
-        protected static readonly SpawnConfig ZenInitial     = new(true,  false, false); 
-        protected static readonly SpawnConfig ZenSpawnFade   = new(true,  false, false); 
-        protected static readonly SpawnConfig ZenReusePop    = new(true,  true,  false); 
+        protected static readonly SpawnConfig DefaultBatch   = new(false, true);  
+        protected static readonly SpawnConfig ZenInitial     = new(true, false); 
+        protected static readonly SpawnConfig ZenSpawnFade   = new(true, false); 
+        protected static readonly SpawnConfig ZenReusePop    = new(true,  false); 
         
         protected void InitIfNeeded()
         {
@@ -81,8 +79,11 @@ namespace Core.Spawn.Spawners
             dot.SetText(number.ToString());
             dot.SetNumber(number);
 
-            if (cfg.UsePop) DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot);
-            else            DoTweenManager.PlayFadeAnimation(dot.gameObject, dot, DoTweenManager.FadeType.FadeIn);
+            dot.MoveUnderOtherDots();
+            dot.SetActivatedState(true);
+            dot.SetPendingState(true);
+            
+            DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot, () => dot.SetActivatedState(true));
 
             pool.Add(dot);
             return dot;
@@ -110,11 +111,7 @@ namespace Core.Spawn.Spawners
             dot.SetText(number.ToString());
             dot.SetNumber(number);
 
-            if (cfg.UsePop) DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot);
-            else            DoTweenManager.PlayFadeAnimation(dot.gameObject, dot, DoTweenManager.FadeType.FadeIn);
+            DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot, () => dot.SetActivatedState(true));
         }
-
-
-        public abstract void Spawn();
     }
 }

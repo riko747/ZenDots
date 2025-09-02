@@ -4,7 +4,7 @@ using Zenject;
 
 namespace Interfaces.Managers
 {
-    internal interface IGameManager
+    public interface IGameManager
     {
         public void Initialize();
         public IInstantiator Instantiator { get; }

@@ -9,8 +9,8 @@ namespace Managers
 {
     public class LevelManager : ILevelManager
     {
-        [Inject] PlayerPrefsManager _playerPrefsManager;
-        [Inject] GameManager _gameManager;
+        [Inject] IPlayerPrefsManager _playerPrefsManager;
+        [Inject] IGameManager _gameManager;
         
         private LevelDataBase _levelDataBase;
 

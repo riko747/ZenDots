@@ -6,5 +6,6 @@ namespace Interfaces.Managers
     {
         public void Initialize();
         public LevelData GetCurrentLevel();
+        public void SaveCurrentLevel();
     }
 }

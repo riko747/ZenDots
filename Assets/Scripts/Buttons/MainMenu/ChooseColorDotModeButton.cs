@@ -1,4 +1,5 @@
 ﻿using Buttons.DefaultMode;
+using Interfaces.Managers;
 using Managers;
 using Other;
 using Zenject;
@@ -7,8 +8,8 @@ namespace Buttons.MainMenu
 {
     public class ChooseColorDotModeButton : UIButton
     {
-        [Inject] private SceneLoadManager _sceneLoadManager;
-        [Inject] private PlayerPrefsManager _playerPrefsManager;
+        [Inject] private ISceneLoadManager _sceneLoadManager;
+        [Inject] private IPlayerPrefsManager _playerPrefsManager;
         
         protected override void HandleButton()
         {

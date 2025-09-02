@@ -6,23 +6,16 @@ namespace Core.Spawn
 {
     internal static class DotPlacement
     {
-        public static Vector2 GetFreePos(
-            RectTransform area,
-            Vector3[] corners,
-            List<Dot> existing,
-            Dot newDot,
-            int maxChecks,
-            bool skipInactive
-        )
+        public static Vector2 GetFreePos(RectTransform area, Vector3[] corners, List<Dot> existingDots, Dot newDot, int maxChecks, bool skipInactive)
         {
-            int attempts = 0;
+            var attempts = 0;
             area.GetWorldCorners(corners);
-            float pad = newDot.GetSizeInWorldSpace() * 0.5f;
+            var pad = newDot.GetSizeInWorldSpace() * 0.5f;
 
-            float minX = corners[0].x + pad;
-            float maxX = corners[3].x - pad;
-            float minY = corners[0].y + pad;
-            float maxY = corners[1].y - pad;
+            var minX = corners[0].x + pad;
+            var maxX = corners[3].x - pad;
+            var minY = corners[0].y + pad;
+            var maxY = corners[1].y - pad;
 
             if (minX > maxX || minY > maxY)
             {
@@ -37,12 +30,11 @@ namespace Core.Spawn
                     Random.Range(minY, maxY)
                 );
 
-                bool overlap = false;
-                for (int i = 0; i < existing.Count; i++)
+                var overlap = false;
+                foreach (var dot in existingDots)
                 {
-                    var d = existing[i];
-                    if (skipInactive && (d.IsDeactivated || d.IsPending)) continue;
-                    if (Vector2.Distance(pos, d.GetPosition()) < d.GetSizeInWorldSpace())
+                    if (skipInactive && (!dot.IsActivated || dot.IsPending)) continue;
+                    if (Vector2.Distance(pos, dot.GetPosition()) < dot.GetSizeInWorldSpace())
                     {
                         overlap = true;
                         break;

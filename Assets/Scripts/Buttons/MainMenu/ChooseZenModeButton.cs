@@ -1,5 +1,5 @@
 using Buttons.DefaultMode;
-using Managers;
+using Interfaces.Managers;
 using Other;
 using Zenject;
 
@@ -7,8 +7,8 @@ namespace Buttons.MainMenu
 {
     public class ChooseZenModeButton : UIButton
     {
-        [Inject] private PlayerPrefsManager _playerPrefsManager;
-        [Inject] private UIManager _uiManager;
+        [Inject] private IPlayerPrefsManager _playerPrefsManager;
+        [Inject] private IUIManager _uiManager;
 
         protected override void HandleButton()
         {

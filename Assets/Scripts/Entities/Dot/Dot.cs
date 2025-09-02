@@ -1,5 +1,5 @@
 using Buttons.DefaultMode;
-using Managers;
+using Interfaces.Managers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,7 +9,7 @@ namespace Entities.Dot
 {
     public class Dot : MonoBehaviour
     {
-        [Inject] private DoTweenManager _doTweenManager;
+        [Inject] private IDoTweenManager _doTweenManager;
     
         [SerializeField] private TextMeshProUGUI label;
         [SerializeField] private Image image;
@@ -25,7 +25,7 @@ namespace Entities.Dot
         public RectTransform GetTransform() => transform as RectTransform;
         public float GetDotSizeInPixelsX() => GetTransform().sizeDelta.x;
         public bool IsLast { get; private set; }
-        public bool IsDeactivated { get; private set; }
+        public bool IsActivated { get; private set; }
         public bool IsPending { get; private set; }
         public float GetSizeInWorldSpace()
         {
@@ -41,32 +41,16 @@ namespace Entities.Dot
         public void SetNumber(int number) => DotNumber = number;
         public void SetText(string text) => label.text = text;
         public void SetLast(bool last) => IsLast = last;
-        public void DisableGraphics() => image.enabled = false;
-        public void EnableGraphics() => image.enabled = true;
         
         public void SetActivatedState(bool activated)
         {
-            if (activated)
-            {
-                IsDeactivated = false;
-            }
-            else
-            {
-                IsDeactivated = true;
-                
-            }
+            IsPending = false;
+            IsActivated = activated;
         }
 
         public void SetPendingState(bool pending)
         {
-            if (pending)
-            {
-                IsPending = true;
-            }
-            else
-            {
-                IsPending = false;
-            }
+            IsPending = pending;
         }
 
         public void MoveUnderOtherDots() => transform.SetSiblingIndex(0);

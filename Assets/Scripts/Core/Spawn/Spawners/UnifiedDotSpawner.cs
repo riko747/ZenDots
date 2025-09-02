@@ -27,7 +27,7 @@ namespace Core.Spawn.Spawners
                 : new List<Dot>();
         }
 
-        public override void Spawn()
+        public void Spawn()
         {
             InitIfNeeded();
 
@@ -74,7 +74,7 @@ namespace Core.Spawn.Spawners
             foreach (var dot in _dotPool)
             {
                 if (dot == null || dot.GetTransform() == null) continue;
-                if (!dot.IsDeactivated || dot.IsPending) continue;
+                if (dot.IsActivated || dot.IsPending) continue;
 
                 ReuseCore(dot, _dotPool, number, ZenReusePop);
                 return true;

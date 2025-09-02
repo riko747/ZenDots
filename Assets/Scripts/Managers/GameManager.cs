@@ -13,10 +13,10 @@ namespace Managers
         [Inject] public void InitializeInstantiator(IInstantiator instantiator) => Instantiator = instantiator;
         
         [Inject] private DotSpawner _dotSpawner;
-        [Inject] private UIManager _uiManager;
-        [Inject] private LevelManager _levelManager;
-        [Inject] private PlayerPrefsManager _playerPrefsManager;
-        [Inject] private SceneLoadManager _sceneLoadManager;
+        [Inject] private IUIManager _uiManager;
+        [Inject] private ILevelManager _levelManager;
+        [Inject] private IPlayerPrefsManager _playerPrefsManager;
+        [Inject] private ISceneLoadManager _sceneLoadManager;
         
         private string _gameMode;
         
