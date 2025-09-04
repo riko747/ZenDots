@@ -9,5 +9,7 @@ namespace Interfaces.Managers
         public void PlayPopOutAnimation(RectTransform transform, Dot dot, Action callback =  null);
         public void PlayPopInAnimation(RectTransform transform, Dot dot , Action callback =  null);
         public void PlayRippleAnimation(Dot dot, DotRipple ripple, Action callback =  null);
+        public void PlayIdleAnimation(Dot dot, int animationId, Action callback =  null);
+        public void KillIdleTween(int animationId);
     }
 }

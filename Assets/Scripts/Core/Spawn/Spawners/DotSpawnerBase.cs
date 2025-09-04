@@ -84,6 +84,7 @@ namespace Core.Spawn.Spawners
             dot.SetPendingState(true);
             
             DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot, () => dot.SetActivatedState(true));
+            DoTweenManager.PlayIdleAnimation(dot, dot.DotNumber);
 
             pool.Add(dot);
             return dot;
@@ -112,6 +113,7 @@ namespace Core.Spawn.Spawners
             dot.SetNumber(number);
 
             DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot, () => dot.SetActivatedState(true));
+            DoTweenManager.PlayIdleAnimation(dot, dot.DotNumber);
         }
     }
 }

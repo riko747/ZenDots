@@ -1,9 +1,12 @@
-using UnityEngine.SceneManagement;
+using Interfaces.Managers;
+using Other;
+using Zenject;
 
 namespace Buttons.DefaultMode
 {
     public class RetryLevelButton : UIButton
     {
-        protected override void HandleButton() => SceneManager.LoadScene(0);
+        [Inject] private ISceneLoadManager sceneLoadManager;
+        protected override void HandleButton() => sceneLoadManager.LoadScene(Constants.GameSceneName);
     }
 }

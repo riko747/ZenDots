@@ -1521,12 +1521,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1199363234}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 73f41d8e6a1d7e943923c4436b9c890b, type: 3}
+  m_Script: {fileID: 11500000, guid: 5f01948aedb2489e9fe02aed674ce461, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gameModeButtonsParent: {fileID: 745842348}
   dotModeButtonsParent: {fileID: 871425364}
-  retryScreen: {fileID: 0}
 --- !u!1 &1517330912
 GameObject:
   m_ObjectHideFlags: 0
@@ -1604,7 +1603,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64ad6d898fd14e44ab26cb4828695106, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uiManager: {fileID: 1199363239}
+  menuUIManager: {fileID: 1199363239}
 --- !u!1 &1700960393
 GameObject:
   m_ObjectHideFlags: 0

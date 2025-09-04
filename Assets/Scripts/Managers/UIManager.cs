@@ -1,29 +1,34 @@
 using Interfaces.Managers;
 using UnityEngine;
+using Zenject;
 
 namespace Managers
 {
-    public class UIManager : MonoBehaviour, IUIManager
+    public class UIManager : MonoBehaviour
     {
-        [Header("Button Groups")]
-        [SerializeField] private GameObject gameModeButtonsParent;
-        [SerializeField] private GameObject dotModeButtonsParent;
+        [Inject] IGameManager gameManager;
         
-        [Header("Screens")]
         [SerializeField] private GameObject retryScreen;
+        
+        [SerializeField] private GameObject timer;
 
-        public void ProceedToDotModeSelection()
+        private void Awake()
         {
-            gameModeButtonsParent.SetActive(false);
-            dotModeButtonsParent.SetActive(true);
+            gameManager.OnLevelFailed += ShowRetryButton;
+            gameManager.OnDotsSpawned += ShowTimer;
         }
         
+        public void ShowTimer() => timer.SetActive(true);
+
         public void ShowRetryButton()
         {
-            if (retryScreen != null)
-            {
-                retryScreen.SetActive(true);
-            }
+            retryScreen.SetActive(true);
+        }
+
+        private void OnDestroy()
+        {
+            gameManager.OnLevelFailed -= ShowRetryButton;
+            gameManager.OnDotsSpawned -= ShowTimer;
         }
     }
 }

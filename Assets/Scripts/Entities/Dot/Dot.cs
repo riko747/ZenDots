@@ -23,7 +23,6 @@ namespace Entities.Dot
         public AudioSource GetAudioSource() => audioSource;
         public Vector2 GetPosition() => transform.position;
         public RectTransform GetTransform() => transform as RectTransform;
-        public float GetDotSizeInPixelsX() => GetTransform().sizeDelta.x;
         public bool IsLast { get; private set; }
         public bool IsActivated { get; private set; }
         public bool IsPending { get; private set; }
@@ -60,6 +59,5 @@ namespace Entities.Dot
         #region Properties
         public int DotNumber { get; private set; }
         #endregion
-    
     }
 }

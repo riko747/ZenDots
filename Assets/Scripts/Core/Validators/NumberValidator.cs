@@ -26,15 +26,7 @@ namespace Core.Validators
             {
                 _expectedNumber++;
                 dot.GetDotButton().PlayCorrectSequence();
-                if (_gameMode == Constants.DefaultGameMode)
-                {
-                    if (dot.IsLast)
-                    {
-                        _levelManager.SaveCurrentLevel();
-                        _gameManager.OnLevelCompleted?.Invoke();
-                    }
-                }
-                else
+                if (_gameMode == Constants.ZenGameMode)
                 {
                     _gameManager.OnRightDotClicked?.Invoke();
                 }

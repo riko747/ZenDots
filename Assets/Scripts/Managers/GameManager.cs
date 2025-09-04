@@ -12,9 +12,6 @@ namespace Managers
     {
         [Inject] public void InitializeInstantiator(IInstantiator instantiator) => Instantiator = instantiator;
         
-        [Inject] private DotSpawner _dotSpawner;
-        [Inject] private IUIManager _uiManager;
-        [Inject] private ILevelManager _levelManager;
         [Inject] private IPlayerPrefsManager _playerPrefsManager;
         [Inject] private ISceneLoadManager _sceneLoadManager;
         
@@ -24,6 +21,8 @@ namespace Managers
         public IValidateStrategy  ValidateStrategy { get; private set; }
         public Action OnRightDotClicked { get; set; }
         public Action OnLevelCompleted { get; set; }
+        public Action OnLevelFailed { get; set; }
+        public Action OnDotsSpawned { get; set; }
 
         public void Initialize()
         {

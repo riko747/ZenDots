@@ -12,5 +12,8 @@ namespace Interfaces.Managers
         public string GetGameMode();
         public Action OnRightDotClicked { get; set; }
         public Action OnLevelCompleted { get; set; }
+        public Action OnLevelFailed { get; set; }
+        public Action OnDotsSpawned { get; set; }
+
     }
 }

@@ -11,6 +11,7 @@ namespace Buttons.DefaultMode
         [Inject] private IGameManager _gameManager;
         [Inject] private IDoTweenManager _doTweenManager;
         [Inject] private IAudioManager _audioManager;
+        [Inject] private ILevelManager _levelManager;
         
         [SerializeField] private Dot dot;
         [SerializeField] private SoundLibrary soundLibrary;
@@ -24,7 +25,14 @@ namespace Buttons.DefaultMode
         {
             _audioManager.PlaySound(dot.GetAudioSource(), soundLibrary.popSound);
             dot.SetPendingState(true);
-            _doTweenManager.PlayPopOutAnimation(dot.GetTransform(), dot, () => dot.SetActivatedState(true));
+            _doTweenManager.PlayPopOutAnimation(dot.GetTransform(), dot, () =>
+            {
+                dot.SetActivatedState(false);
+                if (!dot.IsLast) return;
+                
+                _levelManager.SaveCurrentLevel();
+                _gameManager.OnLevelCompleted?.Invoke();
+            });
         }
         
         public void PlayWrongSequence()

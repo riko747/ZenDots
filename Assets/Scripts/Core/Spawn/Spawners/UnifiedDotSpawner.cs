@@ -39,6 +39,7 @@ namespace Core.Spawn.Spawners
                 GameManager.OnRightDotClicked += OnRightClick;
                 
                 SpawnBatchCore(_dotPool, Constants.ZenModeDotsStartCount, startNumber: 1, spawnConfig: ZenInitial);
+                _gameManager.OnDotsSpawned?.Invoke();
             }
             else
             {
