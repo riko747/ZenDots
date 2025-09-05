@@ -3,8 +3,9 @@ using UnityEngine;
 namespace Audio
 {
     [CreateAssetMenu(fileName = "SoundLibrary", menuName = "Audio/SoundLibrary")]
-    public class SoundLibrary : ScriptableObject
+    public sealed class SoundLibrary : ScriptableObject
     {
-        public AudioClip popSound;
+        [SerializeField] private AudioClip popSound;
+        public AudioClip PopSound => popSound;
     }
 }

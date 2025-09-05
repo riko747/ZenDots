@@ -23,7 +23,7 @@ namespace Buttons.DefaultMode
 
         public void PlayCorrectSequence()
         {
-            _audioManager.PlaySound(dot.GetAudioSource(), soundLibrary.popSound);
+            _audioManager.PlaySound(dot.GetAudioSource(), soundLibrary.PopSound);
             dot.SetPendingState(true);
             _doTweenManager.PlayPopOutAnimation(dot.GetTransform(), dot, () =>
             {

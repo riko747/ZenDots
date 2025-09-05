@@ -16,6 +16,7 @@ namespace Entities.Dot
         [SerializeField] private DotButton button;
         [SerializeField] private AudioSource audioSource;
         [SerializeField] private DotRipple ripple;
+        [SerializeField] private RectTransform rectTransform;
 
         #region Getters
         public DotButton GetDotButton() => button;
@@ -26,6 +27,7 @@ namespace Entities.Dot
         public bool IsLast { get; private set; }
         public bool IsActivated { get; private set; }
         public bool IsPending { get; private set; }
+
         public float GetSizeInWorldSpace()
         {
             var corners = new Vector3[4];
@@ -59,5 +61,15 @@ namespace Entities.Dot
         #region Properties
         public int DotNumber { get; private set; }
         #endregion
+        
+        public Vector2 GetVisualCenterWorld()
+            => rectTransform.TransformPoint(rectTransform.rect.center);
+        
+        public float GetVisualRadiusWorld()
+        {
+            var size = Vector2.Scale(rectTransform.rect.size, rectTransform.lossyScale);
+            return Mathf.Max(size.x, size.y) * 0.5f;
+        }
+
     }
 }

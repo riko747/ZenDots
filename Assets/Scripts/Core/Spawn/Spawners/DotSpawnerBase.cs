@@ -49,7 +49,7 @@ namespace Core.Spawn.Spawners
             => Random.Range(Constants.MinDotSize, Constants.MaxDotSize);
 
         private Vector2 PlaceDot(List<Dot> pool, Dot dot, bool skipInactive)
-            => DotPlacement.GetFreePos(area, corners, pool, dot, Constants.MaxChecks, skipInactive);
+            => DotPlacement.GetFreePos(area, corners, pool, dot, skipInactive);
 
         private void BringToFront(Dot d)
         {
@@ -80,7 +80,6 @@ namespace Core.Spawn.Spawners
             dot.SetNumber(number);
 
             dot.MoveUnderOtherDots();
-            dot.SetActivatedState(true);
             dot.SetPendingState(true);
             
             DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot, () => dot.SetActivatedState(true));
@@ -111,6 +110,10 @@ namespace Core.Spawn.Spawners
 
             dot.SetText(number.ToString());
             dot.SetNumber(number);
+            
+            dot.MoveUnderOtherDots();
+            dot.SetActivatedState(true);
+            dot.SetPendingState(true);
 
             DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot, () => dot.SetActivatedState(true));
             DoTweenManager.PlayIdleAnimation(dot, dot.DotNumber);

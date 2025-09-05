@@ -16,13 +16,14 @@ namespace Core.Spawn.Spawners
         private readonly List<Dot> _dotPool;
         private int _nextDotNumber;
         private float _lastClickTs;
-        
+        private bool _working;
+
         private const float ClickCooldown = 0.08f;
 
         public UnifiedDotSpawner(RectTransform area, string gameMode) : base(area)
         {
             _isZen = gameMode == Constants.ZenGameMode;
-            _dotPool  = _isZen
+            _dotPool = _isZen
                 ? new List<Dot>(Constants.ZenModeDotsStartCount)
                 : new List<Dot>();
         }
@@ -34,17 +35,20 @@ namespace Core.Spawn.Spawners
             if (_isZen)
             {
                 _nextDotNumber = Constants.ZenModeDotsStartCount + 1;
-
-                GameManager.OnRightDotClicked -= OnRightClick;
-                GameManager.OnRightDotClicked += OnRightClick;
                 
+                if (_gameManager != null)
+                {
+                    _gameManager.OnRightDotClicked -= OnRightClick;
+                    _gameManager.OnRightDotClicked += OnRightClick;
+                }
+
                 SpawnBatchCore(_dotPool, Constants.ZenModeDotsStartCount, startNumber: 1, spawnConfig: ZenInitial);
-                _gameManager.OnDotsSpawned?.Invoke();
+                _gameManager?.OnDotsSpawned?.Invoke();
             }
             else
             {
                 var count = _levels.GetCurrentLevel().dotCount;
-                
+
                 _dotPool.Capacity = Mathf.Max(_dotPool.Capacity, count);
                 SpawnBatchCore(_dotPool, count, startNumber: 1, spawnConfig: DefaultBatch);
             }
@@ -67,7 +71,10 @@ namespace Core.Spawn.Spawners
 
                 _nextDotNumber++;
             }
-            finally { _working = false; }
+            finally
+            {
+                _working = false;
+            }
         }
 
         private bool TryReuseDeactivated(int number)
@@ -84,12 +91,10 @@ namespace Core.Spawn.Spawners
             return false;
         }
 
-        public void Stop()
+        public void RemoveSubscriptions()
         {
-            if (_isZen)
+            if (_isZen && _gameManager != null)
                 _gameManager.OnRightDotClicked -= OnRightClick;
         }
-        
-        private bool _working;
     }
 }

@@ -7,6 +7,7 @@ namespace Core.Spawn.Spawners
     public class DotSpawner : MonoBehaviour
     {
         [Inject] private IGameManager _gameManager;
+        
         [SerializeField] private RectTransform gameArea;
 
         private UnifiedDotSpawner _current;
@@ -18,8 +19,10 @@ namespace Core.Spawn.Spawners
             _current.Spawn();
         }
 
-        private void OnDisable() => _current?.Stop();
+        private void RemoveSubscriptions() => _current?.RemoveSubscriptions();
 
-        private void OnDestroy() => _current?.Stop();
+        private void OnDisable() => RemoveSubscriptions();
+
+        private void OnDestroy() => RemoveSubscriptions();
     }
 }

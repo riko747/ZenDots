@@ -291,6 +291,7 @@ MonoBehaviour:
   button: {fileID: 8492011459225374531}
   audioSource: {fileID: 8815246901535824410}
   ripple: {fileID: 521591507781334215}
+  rectTransform: {fileID: 9220557586720150689}
 --- !u!82 &8815246901535824410
 AudioSource:
   m_ObjectHideFlags: 0
