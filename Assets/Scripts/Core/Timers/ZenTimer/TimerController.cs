@@ -46,6 +46,12 @@ namespace Core.Timers.ZenTimer
                     break;
                 }
             }
+
+            if (_timerModel.GetCurrentTime() > 0)
+            {
+                StartCoroutine(TimerCoroutine());
+                yield break;
+            }
             gameManager?.OnLevelFailed?.Invoke();
         }
 
