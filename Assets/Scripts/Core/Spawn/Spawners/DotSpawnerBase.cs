@@ -1,281 +1,187 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Entities.Dot;
 using Interfaces.Managers;
 using Other;
 using UnityEngine;
 using Zenject;
+using Random = UnityEngine.Random;
 
 namespace Core.Spawn.Spawners
 {
     public abstract class DotSpawnerBase
     {
-        [Inject] protected IResourcesManager ResourcesManager;
-        [Inject] protected IGameManager GameManager;
-        [Inject] protected IDoTweenManager DoTweenManager;
+        private readonly RectTransform _areaRectTransform;
+        private readonly Vector3[] _worldCorners = new Vector3[4];
+        private Dot _dotPrefab;
 
-        private readonly RectTransform area;
-        private readonly Vector3[] corners = new Vector3[4];
+        protected IResourcesManager ResourcesManager { get; private set; }
+        protected IGameManager GameManager { get; private set; }
+        protected IDoTweenManager DoTweenManager { get; private set; }
 
-        private Dot prefab;
-
-        protected DotSpawnerBase(RectTransform area) => this.area = area;
-
-        protected struct SpawnConfig
+        protected DotSpawnerBase(RectTransform areaRectTransform)
         {
-            public readonly bool SkipInactive;
-            public readonly bool MarkLastInBatch;
-
-            public SpawnConfig(bool skipInactive, bool markLastInBatch)
-            {
-                SkipInactive = skipInactive;
-                MarkLastInBatch = markLastInBatch;
-            }
+            _areaRectTransform = areaRectTransform 
+                ?? throw new ArgumentNullException(nameof(areaRectTransform));
         }
 
-        private const int   BestCandidateSamples  = 36;
-        private const float CollisionPaddingPixels = 2f;
-        private const float PeakScaleDuringPop     = 1.2f;
-        private const float MaxSeparationIters = 250;
-        private const float SeparationEpsilon      = 1.2f;
+        [Inject]
+        private void Construct(
+            IResourcesManager resourcesManager,
+            IGameManager gameManager,
+            IDoTweenManager doTweenManager)
+        {
+            ResourcesManager = resourcesManager;
+            GameManager = gameManager;
+            DoTweenManager = doTweenManager;
+        }
 
-        protected static readonly SpawnConfig DefaultBatch = new(false, true);
-        protected static readonly SpawnConfig ZenInitial = new(false, false);
-        protected static readonly SpawnConfig ZenSpawnFade = new(false, false);
-        protected static readonly SpawnConfig ZenReusePop = new(false, false);
+        protected bool InitIfNeeded()
+        {
+            if (_dotPrefab) return true;
+            if (_areaRectTransform == null || ResourcesManager == null) return false;
+
+            _dotPrefab = ResourcesManager.LoadEntity<Dot>(Constants.DotPrefabPath);
+            if (!_dotPrefab) return false;
+
+            _areaRectTransform.GetWorldCorners(_worldCorners);
+            return true;
+        }
+
+        private void EnsureInitialized()
+        {
+            if (!InitIfNeeded() || GameManager == null)
+                throw new InvalidOperationException(
+                    $"{GetType().Name}: Not initialized. " +
+                    "Make sure Construct() ran and InitIfNeeded() returned true before spawning.");
+        }
 
         private void UpdateWorldCorners()
         {
-            if (area != null)
-                area.GetWorldCorners(corners);
+            _areaRectTransform.GetWorldCorners(_worldCorners);
         }
 
-        protected void InitIfNeeded()
+        protected static void PruneNulls(List<Dot> dotPool)
+            => dotPool.RemoveAll(d => d == null || d.GetTransform() == null);
+
+        protected Dot AddOrReuseDot(List<Dot> dotPool, int dotNumber, Dot reuseDot = null)
         {
-            if (prefab != null) return;
-
-            Debug.Assert(area != null, "[DotSpawner] Area is null");
-            prefab = ResourcesManager.LoadEntity<Dot>(Constants.DotPrefabPath);
-            Debug.Assert(prefab != null, "[DotSpawner] Prefab not found at Constants.DotPrefabPath");
-        }
-
-        private float RandSizePx()
-            => Random.Range(Constants.MinDotSize, Constants.MaxDotSize);
-
-        private Vector2 PlaceDot(List<Dot> pool, Dot dot, bool skipInactive)
-            => DotPlacement.GetFreePos(area, corners, pool, dot, skipInactive);
-
-        private void BringToFront(Dot d)
-        {
-            d.GetTransform().SetAsLastSibling();
-        }
-
-        protected static void PruneNulls(List<Dot> pool)
-        {
-            for (int i = pool.Count - 1; i >= 0; i--)
-            {
-                var d = pool[i];
-                if (d == null || d.GetTransform() == null)
-                    pool.RemoveAt(i);
-            }
-        }
-
-        protected Dot SpawnCore(List<Dot> pool, int number, SpawnConfig cfg)
-        {
-            var dot = GameManager.Instantiator.InstantiatePrefabForComponent<Dot>(prefab, area);
-
-            DotUtil.Activate(dot);
-            BringToFront(dot);
-
-            dot.SetSize(RandSizePx());
-
+            EnsureInitialized();
             UpdateWorldCorners();
 
-            dot.SetPosition(PlaceDot(pool, dot, cfg.SkipInactive));
-            SeparateFromNeighbors(dot, pool);
+            var dot = reuseDot ?? GameManager.Instantiator
+                .InstantiatePrefabForComponent<Dot>(_dotPrefab, _areaRectTransform);
 
-            dot.SetText(number.ToString());
-            dot.SetNumber(number);
+            DotUtil.Activate(dot);
 
+            dotPool.Remove(dot);
+            DoTweenManager?.ResetAnimations(dot);
+
+            var rectTransform = dot.GetTransform();
+            rectTransform.SetAsLastSibling();
+
+            dot.SetSize(Random.Range(Constants.MinDotSize, Constants.MaxDotSize));
+            dot.SetPosition(DotPlacement.GetFreePos(_areaRectTransform, _worldCorners, dotPool, dot, skipInactive: false));
+            ResolveOverlaps(dot, dotPool);
+
+            dot.SetText(dotNumber.ToString());
+            dot.SetNumber(dotNumber);
             dot.MoveUnderOtherDots();
-            dot.SetPendingState(true);
 
-            DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot, () =>
+            dot.SetPendingState(true);
+            if (DoTweenManager != null)
+            {
+                DoTweenManager.PlayPopInAnimation(rectTransform, dot, () =>
+                {
+                    dot.SetActivatedState(true);
+                    dot.SetPendingState(false);
+                });
+                DoTweenManager.PlayIdleAnimation(dot, dot.DotNumber);
+            }
+            else
             {
                 dot.SetActivatedState(true);
                 dot.SetPendingState(false);
-            });
-            DoTweenManager.PlayIdleAnimation(dot, dot.DotNumber);
+            }
 
-            pool.Add(dot);
+            dotPool.Add(dot);
             return dot;
         }
 
-        protected void SpawnBatchCore(List<Dot> pool, int count, int startNumber, SpawnConfig spawnConfig)
+        protected void SpawnBatch(List<Dot> dotPool, int count, int startNumber, bool markLastInBatch = false)
         {
-            for (int i = 0; i < count; i++)
+            EnsureInitialized();
+            UpdateWorldCorners();
+
+            PruneNulls(dotPool);
+
+            var lastNumber = startNumber + count - 1;
+            for (var dotNumber = startNumber; dotNumber <= lastNumber; dotNumber++)
             {
-                var number = startNumber + i;
-                var dot = SpawnCore(pool, number, spawnConfig);
-                if (spawnConfig.MarkLastInBatch && i == count - 1)
+                var dot = AddOrReuseDot(dotPool, dotNumber);
+                if (markLastInBatch && dotNumber == lastNumber)
                     dot.SetLast(true);
             }
         }
 
-        protected void ReuseCore(Dot dot, List<Dot> pool, int number, SpawnConfig cfg)
+        private void ResolveOverlaps(Dot dot, List<Dot> dotPool)
         {
-            DotUtil.Activate(dot);
-            BringToFront(dot);
+            if (dotPool == null || dotPool.Count <= 1) return;
 
-            dot.SetSize(RandSizePx());
+            var rectTransform = dot.GetTransform();
+            if (!rectTransform) return;
 
-            bool wasInPool = pool.Remove(dot);
-
-            UpdateWorldCorners();
-
-            dot.SetPosition(PlaceDot(pool, dot, false));
-            SeparateFromNeighbors(dot, pool);
-
-            if (wasInPool) pool.Add(dot);
-
-            dot.SetText(number.ToString());
-            dot.SetNumber(number);
-
-            dot.MoveUnderOtherDots();
-            dot.SetActivatedState(true);
-            dot.SetPendingState(true);
-
-            DoTweenManager.PlayPopInAnimation(dot.GetTransform(), dot, () =>
+            for (var iteration = 0; iteration < Constants.SeparationIterations; iteration++)
             {
-                dot.SetActivatedState(true);
-                dot.SetPendingState(false);
-            });
-            DoTweenManager.PlayIdleAnimation(dot, dot.DotNumber);
-        }
+                var movedThisIteration = false;
+                var position = rectTransform.anchoredPosition;
+                var radiusA = GetEffectiveRadius(dot);
 
-        private void SeparateFromNeighbors(Dot newDot, List<Dot> dotPool)
-        {
-            RectTransform newTransform = newDot.GetTransform();
-            if (newTransform == null) return;
-
-            for (int iter = 0; iter < MaxSeparationIters; iter++)
-            {
-                bool anyCorrection = false;
-
-                Vector2 currentPos = newTransform.anchoredPosition;
-                float newRadiusEff = GetDotEffectiveRadius(newDot);
-
-                foreach (Dot otherDot in dotPool)
+                var dotCount = dotPool.Count;
+                for (var otherIndex = 0; otherIndex < dotCount; otherIndex++)
                 {
-                    if (otherDot == null || ReferenceEquals(otherDot, newDot)) continue;
+                    var otherDot = dotPool[otherIndex];
+                    if (otherDot == null || ReferenceEquals(otherDot, dot)) continue;
 
-                    RectTransform otherTr = otherDot.GetTransform();
-                    if (otherTr == null) continue;
+                    var otherTransform = otherDot.GetTransform();
+                    if (!otherTransform) continue;
 
-                    float otherRadiusEff = GetDotEffectiveRadius(otherDot);
+                    var requiredDistance = radiusA + GetEffectiveRadius(otherDot)
+                        + Constants.CollisionPaddingPx + Constants.SeparationEpsilon;
 
-                    float required = newRadiusEff + otherRadiusEff + CollisionPaddingPixels + SeparationEpsilon;
-                    Vector2 delta = currentPos - otherTr.anchoredPosition;
-                    float distSq = delta.sqrMagnitude;
-                    float requiredSq = required * required;
+                    var delta = position - otherTransform.anchoredPosition;
+                    var distanceSquared = delta.sqrMagnitude;
+                    var requiredSquared = requiredDistance * requiredDistance;
+                    if (distanceSquared >= requiredSquared) continue;
 
-                    if (distSq < requiredSq)
-                    {
-                        float dist = Mathf.Sqrt(Mathf.Max(1e-6f, distSq));
-                        Vector2 n = dist > 1e-6f ? (delta / dist) : new Vector2(0.7071f, 0.7071f);
-                        float push = required - dist;
+                    var distance = Mathf.Sqrt(Mathf.Max(Constants.MinDistanceEpsilon, distanceSquared));
+                    var direction = distance > Constants.MinDistanceEpsilon ? (delta / distance) : Constants.FallbackNormal;
 
-                        currentPos += n * push;
-                        anyCorrection = true;
-
-                        currentPos = ClampInsideArea(currentPos, newRadiusEff);
-                    }
+                    position += direction * (requiredDistance - distance);
+                    position = ClampInsideArea(position, radiusA);
+                    movedThisIteration = true;
                 }
 
-                newTransform.anchoredPosition = currentPos;
-                if (!anyCorrection) break;
+                rectTransform.anchoredPosition = position;
+                if (!movedThisIteration) break;
             }
         }
 
-        private float GetDotEffectiveRadius(Dot dot)
+        private float GetEffectiveRadius(Dot dot)
         {
-            RectTransform transform = dot.GetTransform();
-            if (transform == null) return 0f;
+            var rectTransform = dot.GetTransform();
+            if (!rectTransform) return 0f;
 
-            float width = transform.sizeDelta.x;
-            if (width <= 0.0001f) width = transform.rect.width;
-
-            float baseRadius = Mathf.Max(0f, width * 0.5f);
-            float currentScale = Mathf.Abs(transform.localScale.x);
-            float effectiveScale = Mathf.Max(currentScale, PeakScaleDuringPop);
-            return baseRadius * effectiveScale;
-        }
-        
-        private Vector2 FindBestCandidatePosition(RectTransform area, List<Dot> dotPool, Dot newDot)
-        {
-            Rect rect = area.rect;
-
-            float newRadius = GetDotEffectiveRadius(newDot);
-            float minX = rect.xMin + newRadius;
-            float maxX = rect.xMax - newRadius;
-            float minY = rect.yMin + newRadius;
-            float maxY = rect.yMax - newRadius;
-
-            if (minX > maxX || minY > maxY)
-                return rect.center;
-
-            Vector2 bestPosition = rect.center;
-            float bestScore = float.NegativeInfinity;
-
-            for (int i = 0; i < BestCandidateSamples; i++)
-            {
-                Vector2 candidate = new Vector2(Random.Range(minX, maxX), Random.Range(minY, maxY));
-                float score = ComputeClearanceScore(candidate, newDot, newRadius, dotPool);
-
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    bestPosition = candidate;
-                }
-            }
-
-            return bestPosition;
-        }
-
-        private float ComputeClearanceScore(Vector2 candidate, Dot newDot, float newRadius, List<Dot> dotPool)
-        {
-            float worstMargin = float.PositiveInfinity;
-
-            foreach (Dot otherDot in dotPool)
-            {
-                if (otherDot == null || ReferenceEquals(otherDot, newDot)) continue;
-                RectTransform otherTransform = otherDot.GetTransform();
-                if (otherTransform == null) continue;
-
-                float otherRadius = GetDotEffectiveRadius(otherDot);
-                float required = newRadius + otherRadius + CollisionPaddingPixels;
-
-                float distance = (candidate - otherTransform.anchoredPosition).magnitude;
-                float margin = distance - required;
-
-                if (margin < worstMargin)
-                    worstMargin = margin;
-
-                if (worstMargin < -8f) break;
-            }
-
-            return worstMargin;
+            var width = rectTransform.rect.width;
+            var scale = Mathf.Max(Mathf.Abs(rectTransform.localScale.x), Mathf.Abs(rectTransform.localScale.y));
+            return 0.5f * width * scale;
         }
 
         private Vector2 ClampInsideArea(Vector2 position, float radius)
         {
-            Rect rect = area.rect;
-            float minX = rect.xMin + radius;
-            float maxX = rect.xMax - radius;
-            float minY = rect.yMin + radius;
-            float maxY = rect.yMax - radius;
-
-            position.x = Mathf.Clamp(position.x, minX, maxX);
-            position.y = Mathf.Clamp(position.y, minY, maxY);
+            var rect = _areaRectTransform.rect;
+            position.x = Mathf.Clamp(position.x, rect.xMin + radius, rect.xMax - radius);
+            position.y = Mathf.Clamp(position.y, rect.yMin + radius, rect.yMax - radius);
             return position;
         }
     }

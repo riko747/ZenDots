@@ -32,6 +32,16 @@ namespace Other
         //Animation values
         public const float IdleAnimationScaleMin = 0.8f;
         public const float IdleAnimationScaleMax = 1.2f;
+        
+        //Spawn constants
+        public const float CollisionPaddingPx   = 2f;
+        public const float PopScalePeak         = 1.2f;
+        public const int   SeparationIterations = 250;
+        public const float SeparationEpsilon    = 1.2f;
+        public const float RectWidthEpsilon     = 1e-4f;
+
+        public const float MinDistanceEpsilon   = 1e-6f;
+        public static readonly UnityEngine.Vector2 FallbackNormal = new(0.70710678f, 0.70710678f);
 
     }
 }

@@ -23,7 +23,7 @@ namespace Managers
             _doTweenSequence.Play().OnComplete(() => callback?.Invoke());
         }
 
-        public void PlayPopInAnimation(RectTransform transform, Dot dot, Action callback = null)
+        public void PlayPopInAnimation(RectTransform transform, Dot dot, Action callback = null, Action<Dot> callbackGeneric = null)
         {
             KillIdleTween(dot.DotNumber);
             _doTweenSequence = DOTween.Sequence();
@@ -62,6 +62,17 @@ namespace Managers
                 .SetId("idle" + animationId)
                 .SetAutoKill(false)
                 .Play();;
+        }
+
+        public void ResetAnimations(Dot dot)
+        {
+            var dotTransform = dot?.GetTransform();
+            if (!dotTransform) return;
+
+            DOTween.Kill(dotTransform, complete: false);
+            DOTween.Kill(dot, complete: false);
+            dotTransform.localScale = Vector3.one;
+            dotTransform.anchoredPosition3D = new Vector3(dotTransform.anchoredPosition3D.x, dotTransform.anchoredPosition3D.y, 0f);
         }
 
         public void KillIdleTween(int animationId)

@@ -10,7 +10,6 @@ namespace Core.Spawn.Spawners
     public sealed class UnifiedDotSpawner : DotSpawnerBase
     {
         [Inject] private ILevelManager _levels;
-        [Inject] private IGameManager _gameManager;
 
         private readonly bool _isZen;
         private readonly List<Dot> _dotPool;
@@ -23,34 +22,31 @@ namespace Core.Spawn.Spawners
         public UnifiedDotSpawner(RectTransform area, string gameMode) : base(area)
         {
             _isZen = gameMode == Constants.ZenGameMode;
-            _dotPool = _isZen
-                ? new List<Dot>(Constants.ZenModeDotsStartCount)
-                : new List<Dot>();
+            _dotPool = _isZen ? new List<Dot>(Constants.ZenModeDotsStartCount) : new List<Dot>();
         }
 
         public void Spawn()
         {
-            InitIfNeeded();
+            if (!InitIfNeeded()) return;
 
             if (_isZen)
             {
                 _nextDotNumber = Constants.ZenModeDotsStartCount + 1;
-                
-                if (_gameManager != null)
+
+                if (GameManager != null)
                 {
-                    _gameManager.OnRightDotClicked -= OnRightClick;
-                    _gameManager.OnRightDotClicked += OnRightClick;
+                    GameManager.OnRightDotClicked -= OnRightClick;
+                    GameManager.OnRightDotClicked += OnRightClick;
                 }
 
-                SpawnBatchCore(_dotPool, Constants.ZenModeDotsStartCount, startNumber: 1, spawnConfig: ZenInitial);
-                _gameManager?.OnDotsSpawned?.Invoke();
+                SpawnBatch(_dotPool, Constants.ZenModeDotsStartCount, startNumber: 1, markLastInBatch: false);
+                GameManager?.OnDotsSpawned?.Invoke();
             }
             else
             {
                 var count = _levels.GetCurrentLevel().dotCount;
-
                 _dotPool.Capacity = Mathf.Max(_dotPool.Capacity, count);
-                SpawnBatchCore(_dotPool, count, startNumber: 1, spawnConfig: DefaultBatch);
+                SpawnBatch(_dotPool, count, startNumber: 1, markLastInBatch: true);
             }
         }
 
@@ -67,14 +63,11 @@ namespace Core.Spawn.Spawners
                 PruneNulls(_dotPool);
 
                 if (!TryReuseDeactivated(_nextDotNumber))
-                    SpawnCore(_dotPool, _nextDotNumber, ZenSpawnFade);
+                    AddOrReuseDot(_dotPool, _nextDotNumber);
 
                 _nextDotNumber++;
             }
-            finally
-            {
-                _working = false;
-            }
+            finally { _working = false; }
         }
 
         private bool TryReuseDeactivated(int number)
@@ -84,17 +77,16 @@ namespace Core.Spawn.Spawners
                 if (dot == null || dot.GetTransform() == null) continue;
                 if (dot.IsActivated || dot.IsPending) continue;
 
-                ReuseCore(dot, _dotPool, number, ZenReusePop);
+                AddOrReuseDot(_dotPool, number, dot);
                 return true;
             }
-
             return false;
         }
 
         public void RemoveSubscriptions()
         {
-            if (_isZen && _gameManager != null)
-                _gameManager.OnRightDotClicked -= OnRightClick;
+            if (_isZen && GameManager != null)
+                GameManager.OnRightDotClicked -= OnRightClick;
         }
     }
 }

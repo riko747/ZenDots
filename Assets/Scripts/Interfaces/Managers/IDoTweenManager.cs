@@ -7,9 +7,10 @@ namespace Interfaces.Managers
     public interface IDoTweenManager
     {
         public void PlayPopOutAnimation(RectTransform transform, Dot dot, Action callback =  null);
-        public void PlayPopInAnimation(RectTransform transform, Dot dot , Action callback =  null);
+        public void PlayPopInAnimation(RectTransform transform, Dot dot , Action callback =  null, Action<Dot> callbackGeneric = null);
         public void PlayRippleAnimation(Dot dot, DotRipple ripple, Action callback =  null);
         public void PlayIdleAnimation(Dot dot, int animationId, Action callback =  null);
+        void ResetAnimations(Dot dot);
         public void KillIdleTween(int animationId);
     }
 }
