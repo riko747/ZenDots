@@ -2,6 +2,7 @@
 using DG.Tweening;
 using Entities.Dot;
 using Interfaces.Managers;
+using Other;
 using UnityEngine;
 
 namespace Managers
@@ -49,14 +50,14 @@ namespace Managers
 
         public void PlayIdleAnimation(Dot dot, int animationId, Action callback = null)
         {
-            var randomStartValue = UnityEngine.Random.Range(0.1f, 2f);
-            var randomDurationValue = UnityEngine.Random.Range(1f, 3f);
+            var startTimeDelay = UnityEngine.Random.Range(0.1f, 2f);
+            var animationDuration = UnityEngine.Random.Range(1f, 3f);
             
             _doTweenLoopSequence = DOTween.Sequence();
-            _doTweenLoopSequence.SetDelay(randomStartValue)
-                .Append(dot.GetTransform().DOScale(1.2f, randomDurationValue).SetEase(Ease.InOutSine))
-                .Append(dot.GetTransform().DOScale(0.8f, randomDurationValue).SetEase(Ease.InOutSine))
-                .Append(dot.GetTransform().DOScale(1.2f, randomDurationValue).SetEase(Ease.InOutSine))
+            _doTweenLoopSequence.SetDelay(startTimeDelay)
+                .Append(dot.GetTransform().DOScale(Constants.IdleAnimationScaleMax, animationDuration).SetEase(Ease.InOutSine))
+                .Append(dot.GetTransform().DOScale(Constants.IdleAnimationScaleMin, animationDuration).SetEase(Ease.InOutSine))
+                .Append(dot.GetTransform().DOScale(Constants.IdleAnimationScaleMax, animationDuration).SetEase(Ease.InOutSine))
                 .SetLoops(-1, LoopType.Yoyo)
                 .SetId("idle" + animationId)
                 .SetAutoKill(false)

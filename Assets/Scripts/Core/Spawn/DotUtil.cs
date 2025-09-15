@@ -6,7 +6,6 @@ namespace Core.Spawn
     {
         public static void Activate(Dot d)
         {
-            if (d.IsPending) d.SetPendingState(false);
             d.SetActivatedState(true);
             d.SetLast(false);
             d.gameObject.SetActive(true);

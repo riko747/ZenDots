@@ -11,6 +11,8 @@ namespace Core.Spawn.Spawners
         [SerializeField] private RectTransform gameArea;
 
         private UnifiedDotSpawner _current;
+        
+        public UnifiedDotSpawner GetCurrentSpawner => _current;
 
         private void Start()
         {

@@ -28,6 +28,7 @@ namespace Buttons.DefaultMode
             _doTweenManager.PlayPopOutAnimation(dot.GetTransform(), dot, () =>
             {
                 dot.SetActivatedState(false);
+                dot.SetPendingState(false);
                 if (!dot.IsLast) return;
                 
                 _levelManager.SaveCurrentLevel();

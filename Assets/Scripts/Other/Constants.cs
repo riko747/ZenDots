@@ -29,6 +29,9 @@ namespace Other
         public const string CurrentGameMode = "CurrentGameMode";
         public const string CurrentDotMode = "CurrentDotMode";
         
-        
+        //Animation values
+        public const float IdleAnimationScaleMin = 0.8f;
+        public const float IdleAnimationScaleMax = 1.2f;
+
     }
 }

@@ -1,4 +1,5 @@
 using Buttons.DefaultMode;
+using Core.Spawn.Spawners;
 using Interfaces.Managers;
 using TMPro;
 using UnityEngine;
@@ -10,6 +11,7 @@ namespace Entities.Dot
     public class Dot : MonoBehaviour
     {
         [Inject] private IDoTweenManager _doTweenManager;
+        [Inject] private DotSpawner _dotSpawner;
     
         [SerializeField] private TextMeshProUGUI label;
         [SerializeField] private Image image;
@@ -17,6 +19,8 @@ namespace Entities.Dot
         [SerializeField] private AudioSource audioSource;
         [SerializeField] private DotRipple ripple;
         [SerializeField] private RectTransform rectTransform;
+        
+        private readonly Vector3[] _worldCorners = new Vector3[4];
 
         #region Getters
         public DotButton GetDotButton() => button;
@@ -61,14 +65,19 @@ namespace Entities.Dot
         #region Properties
         public int DotNumber { get; private set; }
         #endregion
-        
+
         public Vector2 GetVisualCenterWorld()
-            => rectTransform.TransformPoint(rectTransform.rect.center);
+        {
+            rectTransform.GetWorldCorners(_worldCorners);
+            return (_worldCorners[0] + _worldCorners[1] + _worldCorners[2] + _worldCorners[3]) * 0.25f;
+        }
         
         public float GetVisualRadiusWorld()
         {
-            var size = Vector2.Scale(rectTransform.rect.size, rectTransform.lossyScale);
-            return Mathf.Max(size.x, size.y) * 0.5f;
+            rectTransform.GetWorldCorners(_worldCorners);
+            var widthWorld  = (_worldCorners[3] - _worldCorners[0]).magnitude;
+            var heightWorld = (_worldCorners[1] - _worldCorners[0]).magnitude;
+            return 0.5f * Mathf.Max(widthWorld, heightWorld);
         }
 
     }
