@@ -1,6 +1,6 @@
 # 🎮 ZenDots
 
-ZenDots is a **relaxing anti-stress casual game**, where you tap on colorful balls in the correct sequence.  
+ZenDots is a **relaxing anti-stress casual game**, where you tap on balls in the correct sequence.  
 Think of it like **digital bubble wrap** — simple, satisfying, and calming.  
 
 ---
