@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Entities.Dot;
 using Interfaces.Managers;
 using Other;
@@ -44,7 +45,10 @@ namespace Core.Spawn.Spawners
             }
             else
             {
-                var count = _levels.GetCurrentLevel().dotCount;
+                var level = _levels?.GetCurrentLevel() 
+                            ?? throw new InvalidOperationException($"{nameof(UnifiedDotSpawner)}: ILevelManager is null or level is missing.");
+                var count = level.dotCount;
+
                 _dotPool.Capacity = Mathf.Max(_dotPool.Capacity, count);
                 SpawnBatch(_dotPool, count, startNumber: 1, markLastInBatch: true);
             }
@@ -52,6 +56,9 @@ namespace Core.Spawn.Spawners
 
         private void OnRightClick()
         {
+            // Захист від передчасних викликів обробника
+            if (!InitIfNeeded()) return;
+
             var now = Time.unscaledTime;
             if (now - _lastClickTs < ClickCooldown) return;
             _lastClickTs = now;
@@ -72,14 +79,31 @@ namespace Core.Spawn.Spawners
 
         private bool TryReuseDeactivated(int number)
         {
-            foreach (var dot in _dotPool)
+            // 1) шукаємо кандидата
+            Dot candidate = null;
+
+            // індексна ітерація або foreach без модифікації
+            for (int i = 0; i < _dotPool.Count; i++)
             {
-                if (dot == null || dot.GetTransform() == null) continue;
+                var dot = _dotPool[i];
+                if (dot == null) continue;
+
+                var tr = dot.GetTransform();
+                if (!tr) continue;
+
                 if (dot.IsActivated || dot.IsPending) continue;
 
-                AddOrReuseDot(_dotPool, number, dot);
+                candidate = dot;
+                break;
+            }
+
+            // 2) переспавнюємо поза ітерацією (AddOrReuseDot змінює список)
+            if (candidate != null)
+            {
+                AddOrReuseDot(_dotPool, number, candidate);
                 return true;
             }
+
             return false;
         }
 

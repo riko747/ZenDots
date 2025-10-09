@@ -10,207 +10,220 @@ namespace Core.Spawn
         private const float AnimationScaleMax = 1.30f;
         private const float Padding = 1.05f;
 
+        private static readonly List<Vector2> Centers = new(128);
+        private static readonly List<float> Radii = new(128);
+        private static readonly List<int> ActiveIndices = new(128);
+
+        private static float _minX, _maxX, _minY, _maxY, _newRadius;
+
         public static Vector2 GetFreePos(RectTransform area, Vector3[] areaCorners, List<Dot> existingDots, Dot newDot, bool skipInactive)
         {
             area.GetWorldCorners(areaCorners);
 
-            var newDotCollisionRadius = GetCollisionRadiusForNewDot(newDot);
+            _newRadius = newDot ? GetCollisionRadiusForNewDot(newDot) : 0f;
 
-            var minX = areaCorners[0].x + newDotCollisionRadius;
-            var maxX = areaCorners[3].x - newDotCollisionRadius;
-            var minY = areaCorners[0].y + newDotCollisionRadius;
-            var maxY = areaCorners[1].y - newDotCollisionRadius;
+            _minX = areaCorners[0].x + _newRadius;
+            _maxX = areaCorners[3].x - _newRadius;
+            _minY = areaCorners[0].y + _newRadius;
+            _maxY = areaCorners[1].y - _newRadius;
 
-            if (minX > maxX || minY > maxY)
+            if (_minX > _maxX || _minY > _maxY)
             {
-                var center = (Vector2)(areaCorners[0] + (areaCorners[2] - areaCorners[0]) * 0.5f);
-                return center;
+                var areaCenter = (Vector2)(areaCorners[0] + (areaCorners[2] - areaCorners[0]) * 0.5f);
+                return areaCenter;
             }
 
+            BuildNeighborCache(existingDots, skipInactive);
+
             Vector2 bestPosition = default;
-            var bestClearance = float.NegativeInfinity;
+            var bestClearanceScore = float.NegativeInfinity;
 
             for (var attemptIndex = 0; attemptIndex < Constants.MaxChecks; attemptIndex++)
             {
                 var candidatePosition = new Vector2(
-                    Random.Range(minX, maxX),
-                    Random.Range(minY, maxY)
-                );
+                    Random.Range(_minX, _maxX),
+                    Random.Range(_minY, _maxY));
 
                 var hasOverlap = false;
-                var minClearanceToNeighbors = float.PositiveInfinity;
+                var minClearanceScore = float.PositiveInfinity;
 
-                foreach (var existingDot in existingDots)
+                foreach (var neighborIndex in ActiveIndices)
                 {
-                    if (existingDot == null || existingDot.GetTransform() == null) continue;
-                    if (skipInactive && !existingDot.IsActivated && !existingDot.IsPending) continue;
+                    var neighborCenter = Centers[neighborIndex];
 
-                    var existingDotCenter = existingDot.GetVisualCenterWorld();
-                    var existingDotCollisionRadius = GetCollisionRadiusForExistingDot(existingDot);
+                    var dx = neighborCenter.x - candidatePosition.x;
+                    var dy = neighborCenter.y - candidatePosition.y;
+                    var distanceSquared = dx * dx + dy * dy;
 
-                    var requiredDistance = newDotCollisionRadius + existingDotCollisionRadius;
-                    var requiredDistanceSquared = requiredDistance * requiredDistance;
+                    var requiredRadius = _newRadius + Radii[neighborIndex];
+                    var requiredRadiusSquared = requiredRadius * requiredRadius;
 
-                    var offset = existingDotCenter - candidatePosition;
-                    var distanceSquared = offset.sqrMagnitude;
-                    var distance = Mathf.Sqrt(distanceSquared);
-                    var clearance = distance - requiredDistance;
+                    var clearanceScore = distanceSquared - requiredRadiusSquared;
+                    if (clearanceScore < 0f) hasOverlap = true;
 
-                    if (distanceSquared < requiredDistanceSquared)
-                        hasOverlap = true;
-
-                    if (clearance < minClearanceToNeighbors)
-                        minClearanceToNeighbors = clearance;
+                    if (clearanceScore < minClearanceScore)
+                        minClearanceScore = clearanceScore;
                 }
 
                 if (!hasOverlap)
                     return candidatePosition;
 
-                if (!(minClearanceToNeighbors > bestClearance)) continue;
-                
-                bestClearance = minClearanceToNeighbors;
+                if (!(minClearanceScore > bestClearanceScore)) continue;
+                bestClearanceScore = minClearanceScore;
                 bestPosition = candidatePosition;
             }
 
-            var pushedPosition = PushAwayToSafe(area, areaCorners, existingDots, newDot, bestPosition, skipInactive);
-            var resolvedPosition = ResolveOverlapsIterative(area, areaCorners, existingDots, newDot, pushedPosition, skipInactive);
+            var pushedPosition = PushAwayToSafeCached(bestPosition);
+            var resolvedPosition = ResolveOverlapsIterativeCached(pushedPosition);
+
             return resolvedPosition;
         }
 
-        private static Vector2 ResolveOverlapsIterative(RectTransform area, Vector3[] areaCorners,
-            List<Dot> existingDots, Dot newDot, Vector2 startPosition, bool skipInactive)
+        private static void BuildNeighborCache(List<Dot> existingDots, bool skipInactive)
+        {
+            Centers.Clear();
+            Radii.Clear();
+            ActiveIndices.Clear();
+
+            if (existingDots == null) return;
+
+            foreach (var dot in existingDots)
+            {
+                if (dot == null || dot.GetTransform() == null)
+                {
+                    Centers.Add(default);
+                    Radii.Add(0f);
+                    continue;
+                }
+
+                Centers.Add(dot.GetVisualCenterWorld());
+                Radii.Add(GetCollisionRadiusForExistingDot(dot));
+            }
+
+            for (var dotIndex = 0; dotIndex < existingDots.Count; dotIndex++)
+            {
+                var dot = existingDots[dotIndex];
+                if (dot == null || dot.GetTransform() == null)
+                    continue;
+
+                if (skipInactive && !dot.IsActivated && !dot.IsPending)
+                    continue;
+
+                ActiveIndices.Add(dotIndex);
+            }
+        }
+
+        private static Vector2 ResolveOverlapsIterativeCached(Vector2 startPosition)
         {
             const int maxIterations = 4;
             const float moveFactor = 1.0f;
             const float minMoveThreshold = 0.01f;
 
-            var newDotCollisionRadius = GetCollisionRadiusForNewDot(newDot);
-            var currentPosition = startPosition;
+            var position = startPosition;
 
             for (var iterationIndex = 0; iterationIndex < maxIterations; iterationIndex++)
             {
-                var totalPushDirection = Vector2.zero;
+                var step = Vector2.zero;
                 var totalPenetration = 0f;
-                var hadAnyOverlap = false;
+                var anyOverlap = false;
 
-                foreach (Dot existingDot in existingDots)
+                foreach (var neighborIndex in ActiveIndices)
                 {
-                    if (existingDot == null || existingDot.GetTransform() == null) continue;
-                    if (skipInactive && !existingDot.IsActivated && !existingDot.IsPending) continue;
+                    var neighborCenter = Centers[neighborIndex];
 
-                    var existingDotCenter = existingDot.GetVisualCenterWorld();
-                    var existingDotCollisionRadius = GetCollisionRadiusForExistingDot(existingDot);
+                    var dx = position.x - neighborCenter.x;
+                    var dy = position.y - neighborCenter.y;
+                    var distance = Mathf.Sqrt(dx * dx + dy * dy);
 
-                    var requiredDistance = newDotCollisionRadius + existingDotCollisionRadius;
+                    var requiredRadius = _newRadius + Radii[neighborIndex];
+                    var penetration = requiredRadius - distance;
 
-                    var offset = currentPosition - existingDotCenter;
-                    var distance = offset.magnitude;
+                    if (penetration <= 0f)
+                        continue;
 
-                    var penetration = requiredDistance - distance;
-                    if (!(penetration > 0f)) continue;
-                    hadAnyOverlap = true;
+                    anyOverlap = true;
 
-                    var pushDirection = distance > 1e-5f ? (offset / distance) : Vector2.right;
+                    var direction = distance > 1e-5f
+                        ? new Vector2(dx / distance, dy / distance)
+                        : Vector2.right;
 
-                    totalPushDirection += pushDirection * penetration;
+                    step += direction * penetration;
                     totalPenetration += penetration;
                 }
 
-                if (!hadAnyOverlap)
+                if (!anyOverlap)
                     break;
 
-                var step = totalPushDirection;
                 var stepMagnitude = step.magnitude;
-
                 if (stepMagnitude < minMoveThreshold)
                     break;
 
                 var move = (step / stepMagnitude) * (totalPenetration * moveFactor);
-                currentPosition += move;
+                position += move;
 
-                area.GetWorldCorners(areaCorners);
-                var minX = areaCorners[0].x + newDotCollisionRadius;
-                var maxX = areaCorners[3].x - newDotCollisionRadius;
-                var minY = areaCorners[0].y + newDotCollisionRadius;
-                var maxY = areaCorners[1].y - newDotCollisionRadius;
-
-                currentPosition.x = Mathf.Clamp(currentPosition.x, minX, maxX);
-                currentPosition.y = Mathf.Clamp(currentPosition.y, minY, maxY);
+                position.x = Mathf.Clamp(position.x, _minX, _maxX);
+                position.y = Mathf.Clamp(position.y, _minY, _maxY);
             }
 
-            return currentPosition;
+            return position;
+        }
+
+        private static Vector2 PushAwayToSafeCached(Vector2 position)
+        {
+            const int maxResolveIterations = 3;
+
+            for (var iterationIndex = 0; iterationIndex < maxResolveIterations; iterationIndex++)
+            {
+                var worstNeighborIndex = -1;
+                var worstClearance = float.PositiveInfinity;
+
+                foreach (var neighborIndex in ActiveIndices)
+                {
+                    var neighborCenter = Centers[neighborIndex];
+
+                    var dx = position.x - neighborCenter.x;
+                    var dy = position.y - neighborCenter.y;
+                    var distance = Mathf.Sqrt(dx * dx + dy * dy);
+
+                    var requiredRadius = _newRadius + Radii[neighborIndex];
+                    var clearance = distance - requiredRadius;
+
+                    if (!(clearance < worstClearance)) continue;
+                    worstClearance = clearance;
+                    worstNeighborIndex = neighborIndex;
+                }
+
+                if (worstNeighborIndex == -1 || worstClearance >= 0f)
+                    break;
+
+                var worstCenter = Centers[worstNeighborIndex];
+                var requiredToWorst = _newRadius + Radii[worstNeighborIndex];
+
+                var away = position - worstCenter;
+                var length = away.magnitude;
+                var direction = length > 1e-4f ? away / length : Vector2.right;
+
+                position = worstCenter + direction * requiredToWorst;
+
+                position.x = Mathf.Clamp(position.x, _minX, _maxX);
+                position.y = Mathf.Clamp(position.y, _minY, _maxY);
+            }
+
+            return position;
         }
 
         private static float GetCollisionRadiusForNewDot(Dot dot)
         {
-            var currentRadius = dot.GetVisualRadiusWorld();
-            return currentRadius * AnimationScaleMax * Padding;
+            var visualRadius = dot.GetVisualRadiusWorld();
+            return visualRadius * AnimationScaleMax * Padding;
         }
 
         private static float GetCollisionRadiusForExistingDot(Dot dot)
         {
-            if (dot.IsActivated || dot.IsPending)
-                return dot.GetVisualRadiusWorld() * Padding;
-            
-            return dot.GetVisualRadiusWorld();
-        }
-
-        private static Vector2 PushAwayToSafe(RectTransform area, Vector3[] areaCorners, List<Dot> existingDots, Dot newDot, Vector2 candidatePosition, bool skipInactive)
-        {
-            var newDotCollisionRadius = GetCollisionRadiusForNewDot(newDot);
-
-            const int maxResolveIterations = 3;
-
-            for (var resolveIndex = 0; resolveIndex < maxResolveIterations; resolveIndex++)
-            {
-                Dot mostPenetratingDot = null;
-                Vector2 mostPenetratingCenter = default;
-                var mostPenetratingRadius = 0f;
-                var worstClearance = float.PositiveInfinity;
-
-                foreach (var existingDot in existingDots)
-                {
-                    if (existingDot == null || existingDot.GetTransform() == null) continue;
-                    if (skipInactive && !existingDot.IsActivated && !existingDot.IsPending) continue;
-
-                    var existingDotCenter = existingDot.GetVisualCenterWorld();
-                    var existingDotCollisionRadius = GetCollisionRadiusForExistingDot(existingDot);
-
-                    var offset = candidatePosition - existingDotCenter;
-                    var distance = offset.magnitude;
-
-                    var requiredDistance = newDotCollisionRadius + existingDotCollisionRadius;
-                    var clearance = distance - requiredDistance;
-
-                    if (!(clearance < worstClearance)) continue;
-                    
-                    worstClearance = clearance;
-                    mostPenetratingDot = existingDot;
-                    mostPenetratingCenter = existingDotCenter;
-                    mostPenetratingRadius = existingDotCollisionRadius;
-                }
-
-                if (mostPenetratingDot == null || worstClearance >= 0f)
-                    break;
-
-                var requiredDistanceToThis = newDotCollisionRadius + mostPenetratingRadius;
-                var away = candidatePosition - mostPenetratingCenter;
-                var awayLength = away.magnitude;
-                var pushDirection = awayLength > 1e-4f ? away / awayLength : Vector2.right;
-
-                candidatePosition = mostPenetratingCenter + pushDirection * requiredDistanceToThis;
-
-                area.GetWorldCorners(areaCorners);
-                var minX = areaCorners[0].x + newDotCollisionRadius;
-                var maxX = areaCorners[3].x - newDotCollisionRadius;
-                var minY = areaCorners[0].y + newDotCollisionRadius;
-                var maxY = areaCorners[1].y - newDotCollisionRadius;
-
-                candidatePosition.x = Mathf.Clamp(candidatePosition.x, minX, maxX);
-                candidatePosition.y = Mathf.Clamp(candidatePosition.y, minY, maxY);
-            }
-
-            return candidatePosition;
+            var visualRadius = dot.GetVisualRadiusWorld();
+            return dot.IsActivated || dot.IsPending
+                ? visualRadius * Padding
+                : visualRadius;
         }
     }
 }
